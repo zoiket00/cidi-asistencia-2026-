@@ -339,4 +339,5 @@ document.getElementById("confirmModal").addEventListener("click", (e) => {
   }
 });
 
-cargar();
+// cargar() ya NO se llama aquí automáticamente.
+// Lo invoca el script inline de bebes.html DESPUÉS de requireAuth().

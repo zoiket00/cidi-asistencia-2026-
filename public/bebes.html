@@ -214,6 +214,7 @@
         const usuario = await requireAuth("bebes");
         if (!usuario) return;
         renderSidebar("bebes", usuario.rol);
+        await cargar();
       });
     </script>
   </body>

@@ -498,15 +498,16 @@ const uploadZone = document.getElementById("supabaseZone"); // zona principal re
 
 const LS_RANGO_KEY = "juanfe_dash_ultimo_rango";
 
-document.addEventListener("DOMContentLoaded", () => {
+// La inicialización ya NO corre aquí automáticamente.
+// El script inline de dashboard.html llama initDashboard() DESPUÉS de requireAuth().
+function initDashboard() {
   fileInput.setAttribute("multiple", "true");
   setupUpload();
   setupFilters();
   setupBabySearch();
-  setupSupabaseLoader(); // configura botones de carga desde BD
-  // Restaurar el último rango de fechas si existe
+  setupSupabaseLoader();
   restaurarUltimoRango();
-});
+}
 
 /** Configura los botones y fechas del panel de carga desde Supabase */
 function setupSupabaseLoader() {

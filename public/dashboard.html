@@ -517,6 +517,7 @@
           const usuario = await requireAuth("dashboard");
           if (!usuario) return;
           renderSidebar("dashboard", usuario.rol);
+          initDashboard();
         });
       </script>
     </div>
