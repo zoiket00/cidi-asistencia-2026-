@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Base de Datos — Fundación Juanfe</title>
+    <link rel="icon" type="image/png" href="img/Logo-Juanfe-verde-1-1.png" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/bebes.css" />
+  </head>
+  <body>
+    <header>
+      <div class="header-flex">
+        <img
+          src="img/Logo-Juanfe-verde-1-1.png"
+          alt="Logo Juanfe"
+          class="logo-img"
+        />
+        <h1>Base de Datos — Fundación Juanfe</h1>
+      </div>
+    </header>
+
+    <div class="body-layout">
+      <aside class="sidebar">
+        <nav class="sidebar-nav"></nav>
+      </aside>
+
+      <main class="container">
+        <!-- ── Formulario ── -->
+        <section class="form-section">
+          <div class="form-section-title" id="formTitle">Nuevo registro</div>
+          <input type="hidden" id="editingId" />
+
+          <div class="form-grid-top">
+            <div class="form-field">
+              <label>Nombre bebé</label>
+              <input type="text" id="fNombre" placeholder="Nombre completo" />
+            </div>
+            <div class="form-field">
+              <label>Nombre madre</label>
+              <input
+                type="text"
+                id="fMadre"
+                placeholder="Nombre completo de la madre"
+              />
+            </div>
+          </div>
+
+          <div class="form-grid-bottom">
+            <div class="form-field">
+              <label>Fase</label>
+              <select id="fFase">
+                <option value="">Seleccionar</option>
+                <option value="UTE">UTE</option>
+                <option value="ULA 1">ULA 1</option>
+                <option value="ULA 2">ULA 2</option>
+                <option value="TSF">TSF</option>
+                <option value="Otra">Otra</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Programa</label>
+              <select id="fPrograma">
+                <option value="">Seleccionar</option>
+                <option value="Hotelería">Hotelería</option>
+                <option value="Cocina">Cocina</option>
+                <option value="Belleza">Belleza</option>
+                <option value="Auxiliar Administrativo">
+                  Auxiliar Administrativo
+                </option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Edad (meses)</label>
+              <select id="fEdad">
+                <option value="">Seleccionar</option>
+                <option value="6-15">6-15</option>
+                <option value="16-30">16-30</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Días que asiste</label>
+              <div class="dias-pills" id="diasPills">
+                <span class="dia-pill" data-dia="Lunes">Lunes</span>
+                <span class="dia-pill" data-dia="Martes">Martes</span>
+                <span class="dia-pill" data-dia="Miercoles">Miercoles</span>
+                <span class="dia-pill" data-dia="Jueves">Jueves</span>
+                <span class="dia-pill" data-dia="Viernes">Viernes</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-guardar-form" id="btnGuardar">
+              Guardar registro
+            </button>
+            <button class="btn-limpiar-form" id="btnLimpiar">Limpiar</button>
+          </div>
+        </section>
+
+        <!-- ── Lista ── -->
+        <section class="lista-section">
+          <div class="lista-header">
+            <span class="lista-title" id="listaTitle">Registros actuales</span>
+            <input
+              type="text"
+              class="lista-search"
+              id="listaSearch"
+              placeholder="Buscar por nombre, fase o programa..."
+            />
+          </div>
+          <div id="listaBebes"></div>
+          <div class="pagination" id="pagination"></div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Modal editar -->
+    <div class="edit-modal" id="editModal">
+      <div class="edit-box">
+        <div class="edit-modal-header">
+          <span class="edit-modal-title">Editar registro</span>
+          <button class="edit-modal-close" id="btnCerrarEdit">&times;</button>
+        </div>
+        <input type="hidden" id="editId" />
+
+        <div class="edit-field">
+          <label>Nombre bebé</label>
+          <input type="text" id="eNombre" placeholder="Nombre completo" />
+        </div>
+        <div class="edit-field">
+          <label>Nombre madre</label>
+          <input
+            type="text"
+            id="eMadre"
+            placeholder="Nombre completo de la madre"
+          />
+        </div>
+        <div class="edit-row">
+          <div class="edit-field">
+            <label>Fase</label>
+            <select id="eFase">
+              <option value="">Seleccionar</option>
+              <option value="UTE">UTE</option>
+              <option value="ULA 1">ULA 1</option>
+              <option value="ULA 2">ULA 2</option>
+              <option value="TSF">TSF</option>
+              <option value="Otra">Otra</option>
+            </select>
+          </div>
+          <div class="edit-field">
+            <label>Programa</label>
+            <select id="ePrograma">
+              <option value="">Seleccionar</option>
+              <option value="Hotelería">Hotelería</option>
+              <option value="Cocina">Cocina</option>
+              <option value="Belleza">Belleza</option>
+              <option value="Auxiliar Administrativo">
+                Auxiliar Administrativo
+              </option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+        </div>
+        <div class="edit-field" style="max-width: 200px">
+          <label>Edad (meses)</label>
+          <select id="eEdad">
+            <option value="">Seleccionar</option>
+            <option value="6-15">6-15</option>
+            <option value="16-30">16-30</option>
+          </select>
+        </div>
+        <div class="edit-field">
+          <label>Días que asiste</label>
+          <div class="dias-pills">
+            <span class="dia-pill" data-edit-dia="Lunes">Lunes</span>
+            <span class="dia-pill" data-edit-dia="Martes">Martes</span>
+            <span class="dia-pill" data-edit-dia="Miercoles">Miercoles</span>
+            <span class="dia-pill" data-edit-dia="Jueves">Jueves</span>
+            <span class="dia-pill" data-edit-dia="Viernes">Viernes</span>
+          </div>
+        </div>
+        <div class="edit-actions">
+          <button class="btn-guardar-form" id="btnGuardarEdit">
+            Guardar cambios
+          </button>
+          <button class="btn-limpiar-form" id="btnCancelarEdit">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal eliminar -->
+    <div class="confirm-modal" id="confirmModal">
+      <div class="confirm-box">
+        <div class="confirm-icon">🗑️</div>
+        <p class="confirm-msg" id="confirmMsg"></p>
+        <div class="confirm-btns">
+          <button class="btn-confirm-no" id="btnConfirmNo">Cancelar</button>
+          <button class="btn-confirm-si" id="btnConfirmSi">Eliminar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-bebes" id="toastBebes"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/bebes.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const usuario = await requireAuth("bebes");
+        if (!usuario) return;
+        renderSidebar("bebes", usuario.rol);
+      });
+    </script>
+  </body>
+</html>

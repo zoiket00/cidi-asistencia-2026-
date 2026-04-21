@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Asistencia - Fundación Juanfe</title>
+    <link rel="icon" type="image/png" href="img/Logo-Juanfe-verde-1-1.png" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <!-- ── Header full-width ── -->
+    <header>
+      <div class="header-flex">
+        <img
+          src="img/Logo-Juanfe-verde-1-1.png"
+          alt="Logo Juanfe"
+          class="logo-img"
+        />
+        <h1>Control de Asistencia — Fundación Juanfe</h1>
+      </div>
+    </header>
+
+    <!-- ── Body: sidebar + contenido ── -->
+    <div class="body-layout">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <!-- sidebar-nav debe quedar VACÍO aquí.
+             auth.js lo rellena con renderSidebar() según el rol del usuario.
+             Tenerlo hardcodeado aquí causaba que profesoras vieran links
+             a /bebes e /importar antes de que auth verificara permisos. -->
+        <nav class="sidebar-nav"></nav>
+      </aside>
+
+      <!-- Contenido principal -->
+      <main class="container">
+        <section class="file-upload">
+          <div class="file-upload-row">
+            <div class="counter-bar" id="counter-bar" style="display: none">
+              <div class="counter-item counter-total">
+                <span class="counter-label">Total</span>
+                <span class="counter-value" id="count-total">0</span>
+              </div>
+              <div class="counter-item counter-present">
+                <span class="counter-label">Asistencia</span>
+                <span class="counter-value" id="count-present">0</span>
+                <div class="counter-ages">
+                  <span class="age-badge">
+                    <span class="age-label">6-15:</span>
+                    <span class="age-value" id="count-edad1">0</span>
+                  </span>
+                  <span class="age-badge">
+                    <span class="age-label">16-30:</span>
+                    <span class="age-value" id="count-edad2">0</span>
+                  </span>
+                </div>
+              </div>
+              <div class="counter-item counter-absent">
+                <span class="counter-label">Inasistencia</span>
+                <span class="counter-value" id="count-absent">0</span>
+              </div>
+              <div class="counter-item counter-reported">
+                <span class="counter-label">Reportados</span>
+                <span class="counter-value" id="count-reported">0</span>
+                <div class="counter-ages">
+                  <span class="age-badge age-reported">
+                    <span class="age-label">6-15:</span>
+                    <span class="age-value" id="count-rep1">0</span>
+                  </span>
+                  <span class="age-badge age-reported">
+                    <span class="age-label">16-30:</span>
+                    <span class="age-value" id="count-rep2">0</span>
+                  </span>
+                </div>
+              </div>
+              <div class="counter-item counter-extras">
+                <span class="counter-label">Extras</span>
+                <span class="counter-value" id="count-extras">0</span>
+              </div>
+              <div class="counter-item counter-nocidi">
+                <span class="counter-label">No CIDI</span>
+                <span class="counter-value" id="count-nocidi">0</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="controls-row">
+          <input
+            type="text"
+            id="search-input"
+            class="search-input"
+            placeholder="Buscar bebé o madre en la lista..."
+          />
+          <nav class="tabs" id="days-tabs" role="tablist"></nav>
+          <button id="add-baby-btn" class="btn btn-add-baby">
+            ＋ Añadir bebé
+          </button>
+          <button id="export-btn" class="btn btn-export-inline" disabled>
+            ↓ Exportar
+          </button>
+        </section>
+
+        <div id="tabs-content"></div>
+      </main>
+    </div>
+    <!-- /.body-layout -->
+
+    <!-- Modal: Añadir Bebé -->
+    <div
+      id="addBabyModal"
+      class="modal"
+      role="dialog"
+      aria-labelledby="modalTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-content">
+        <span class="close" title="Cerrar">&times;</span>
+        <h2 id="modalTitle">Agregar Nuevo Bebé</h2>
+
+        <div class="form-group search-box-wrapper">
+          <label for="searchBaby">Buscar Bebé Existente</label>
+          <input
+            type="text"
+            id="searchBaby"
+            placeholder="Escribe nombre del bebé o madre..."
+            autocomplete="off"
+          />
+          <div
+            id="searchResults"
+            class="search-results"
+            style="display: none"
+          ></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <form id="babyForm">
+          <div class="form-group">
+            <label for="babyName">Nombre del Bebé *</label>
+            <input
+              type="text"
+              id="babyName"
+              name="babyName"
+              placeholder="Nombre completo"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="motherName">Nombre de la Madre *</label>
+            <input
+              type="text"
+              id="motherName"
+              name="motherName"
+              placeholder="Nombre completo"
+              required
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="motherFase">Fase</label>
+              <select id="motherFase" name="fase">
+                <option value="" disabled selected>Seleccionar</option>
+                <option value="UTE">UTE</option>
+                <option value="ULA 1">ULA 1</option>
+                <option value="ULA 2">ULA 2</option>
+                <option value="TSF">TSF</option>
+                <option value="Otra">Otra</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="motherPrograma">Programa</label>
+              <select id="motherPrograma" name="programa">
+                <option value="" disabled selected>Seleccionar</option>
+                <option value="Hotelería">Hotelería</option>
+                <option value="Cocina">Cocina</option>
+                <option value="Belleza">Belleza</option>
+                <option value="Auxiliar Administrativo">
+                  Auxiliar Administrativo
+                </option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="babyEdad">Edad (meses)</label>
+              <select id="babyEdad" name="edad">
+                <option value="" disabled selected>Seleccionar</option>
+                <option value="6-15">6-15 meses</option>
+                <option value="16-30">16-30 meses</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group checkboxes-row">
+            <label class="visitante-label nocidi-label">
+              <input type="checkbox" id="esNoCidi" name="esNoCidi" />
+              <span>No CIDI</span>
+            </label>
+            <label class="visitante-label">
+              <input type="checkbox" id="esVisitante" name="esVisitante" />
+              <span>Extras</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full">
+            Agregar a la Lista
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Alerta duplicado -->
+    <div id="smartAlertModal" class="modal" style="display: none">
+      <div class="modal-content smart-alert">
+        <div class="alert-header">
+          <span class="alert-icon">⚠️</span>
+          <h3>Registro Duplicado</h3>
+        </div>
+        <div class="alert-body">
+          <p id="smartAlertMessage"></p>
+        </div>
+        <div class="alert-footer">
+          <button id="closeSmartAlert" class="btn-primary">Entendido</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+      // Auth check — corre DESPUÉS de que app.js inicializó el DOM
+      document.addEventListener("DOMContentLoaded", async () => {
+        const usuario = await requireAuth("asistencia");
+        if (!usuario) return; // requireAuth redirige a /login si no hay sesión
+        renderSidebar("asistencia", usuario.rol);
+        // initApp() se llama AQUÍ, solo si hay sesión válida.
+        // Antes corría sola via DOMContentLoaded en app.js, sin esperar auth.
+        await initApp();
+      });
+    </script>
+  </body>
+</html>

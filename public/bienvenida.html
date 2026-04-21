@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bienvenida — Fundación Juanfe</title>
+    <link rel="icon" type="image/png" href="img/Logo-Juanfe-verde-1-1.png" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/bienvenida.css" />
+  </head>
+  <body>
+    <header>
+      <div class="header-flex">
+        <img
+          src="img/Logo-Juanfe-verde-1-1.png"
+          alt="Logo Juanfe"
+          class="logo-img"
+        />
+        <h1>Control de Asistencia — Fundación Juanfe</h1>
+      </div>
+    </header>
+
+    <div class="body-layout">
+      <aside class="sidebar">
+        <nav class="sidebar-nav"></nav>
+      </aside>
+
+      <main class="bienvenida-main">
+        <div class="bienvenida-card">
+          <img
+            src="img/Logo-Juanfe-verde-1-1.png"
+            alt="Juanfe"
+            class="bienvenida-logo"
+          />
+          <h2 class="bienvenida-titulo" id="bienvenidaTitulo">Bienvenida</h2>
+          <p class="bienvenida-sub">
+            Sistema de control de asistencias de la Fundación JUANFE.<br />Selecciona
+            una opción para comenzar.
+          </p>
+          <div class="bienvenida-opciones" id="bienvenidaOpciones"></div>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/auth.js?v=2"></script>
+    <script src="js/bienvenida.js?v=2"></script>
+  </body>
+</html>

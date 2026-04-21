@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Iniciar sesión — Fundación Juanfe</title>
+    <link rel="icon" type="image/png" href="img/Logo-Juanfe-verde-1-1.png" />
+    <link rel="stylesheet" href="css/login.css" />
+  </head>
+  <body>
+    <div class="login-wrap">
+      <div class="login-card">
+        <div class="login-logo">
+          <img src="img/Logo-Juanfe-verde-1-1.png" alt="Juanfe" />
+        </div>
+        <h1 class="login-title">Fundación Juanfe</h1>
+        <p class="login-sub">Sistema CIDI — Control de Asistencia</p>
+
+        <div class="login-form">
+          <div class="login-field">
+            <label>Correo electrónico</label>
+            <input
+              type="email"
+              id="loginEmail"
+              placeholder="correo@juanfe.com"
+              autocomplete="email"
+            />
+          </div>
+          <div class="login-field">
+            <label>Contraseña</label>
+            <div class="pass-wrap">
+              <input
+                type="password"
+                id="loginPass"
+                placeholder="••••••••"
+                autocomplete="current-password"
+              />
+              <button
+                class="btn-ver-pass"
+                id="btnVerPass"
+                tabindex="-1"
+                type="button"
+              >
+                <svg
+                  id="iconOjo"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  width="16"
+                  height="16"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="login-error" id="loginError"></div>
+
+          <button class="btn-login" id="btnLogin">Ingresar</button>
+        </div>
+      </div>
+
+      <div class="login-footer">Fundación Juanfe · Cartagena, Colombia</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/login.js"></script>
+  </body>
+</html>

@@ -1,0 +1,5 @@
+﻿.env
+node_modules/
+historico/
+Excel_Maestro.xlsx
+conexionexcel.js

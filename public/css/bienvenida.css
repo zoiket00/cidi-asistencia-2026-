@@ -1,0 +1,79 @@
+/* bienvenida.css — Pantalla de bienvenida · Fundación Juanfe */
+
+.bienvenida-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+}
+
+.bienvenida-card {
+  text-align: center;
+  max-width: 560px;
+  width: 100%;
+}
+
+.bienvenida-logo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 18px;
+  background: #85da1a;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.bienvenida-titulo {
+  font-size: 26px;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 10px;
+}
+
+.bienvenida-sub {
+  font-size: 14px;
+  color: #888;
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+.bienvenida-opciones {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.opcion-btn {
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 2px solid #ddd;
+  color: #444;
+  background: white;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.opcion-btn:hover {
+  border-color: #85da1a;
+  color: #2e7d32;
+  background: #f0fbe6;
+}
+
+.opcion-primary {
+  background: #85da1a;
+  border-color: #85da1a;
+  color: white;
+}
+
+.opcion-primary:hover {
+  background: #6ab514;
+  border-color: #6ab514;
+  color: white;
+}

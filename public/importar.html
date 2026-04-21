@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Importar Historial — Fundación Juanfe</title>
+    <link rel="icon" type="image/png" href="img/Logo-Juanfe-verde-1-1.png" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/importar.css" />
+  </head>
+  <body>
+    <header>
+      <div class="header-flex">
+        <img
+          src="img/Logo-Juanfe-verde-1-1.png"
+          alt="Logo Juanfe"
+          class="logo-img"
+        />
+        <h1>Importar Historial — Fundación Juanfe</h1>
+      </div>
+    </header>
+
+    <div class="body-layout">
+      <aside class="sidebar">
+        <nav class="sidebar-nav"></nav>
+      </aside>
+
+      <main class="container">
+        <!-- ── Drop zone ── -->
+        <section class="imp-section">
+          <div class="imp-title">Cargar archivos Excel</div>
+          <div class="imp-sub">
+            Puedes subir múltiples archivos a la vez. El sistema detecta
+            automáticamente duplicados antes de importar.
+          </div>
+
+          <div class="drop-zone" id="dropZone">
+            <div class="drop-inner">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#85da1a"
+                stroke-width="1.5"
+                width="40"
+                height="40"
+              >
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              <div class="drop-text">Arrastra los archivos aquí</div>
+              <div class="drop-sub-text">
+                o
+                <span class="drop-link" id="dropLink"
+                  >selecciona desde tu computador</span
+                >
+              </div>
+              <div class="drop-hint">
+                Acepta múltiples .xlsx · Cualquier orden · Cualquier semana
+              </div>
+            </div>
+          </div>
+          <input
+            type="file"
+            id="fileInput"
+            accept=".xlsx"
+            multiple
+            style="display: none"
+          />
+        </section>
+
+        <!-- ── Resumen stats ── -->
+        <div class="stats-row" id="statsRow" style="display: none">
+          <div class="stat-box">
+            <span class="stat-n" id="statTotal">0</span>
+            <span class="stat-l">Archivos</span>
+          </div>
+          <div class="stat-box stat-new">
+            <span class="stat-n" id="statNuevos">0</span>
+            <span class="stat-l">Nuevos</span>
+          </div>
+          <div class="stat-box stat-dup">
+            <span class="stat-n" id="statDups">0</span>
+            <span class="stat-l">Duplicados</span>
+          </div>
+          <div class="stat-box stat-err">
+            <span class="stat-n" id="statErrs">0</span>
+            <span class="stat-l">Errores</span>
+          </div>
+          <div class="stat-box stat-reg">
+            <span class="stat-n" id="statRegs">0</span>
+            <span class="stat-l">Registros totales</span>
+          </div>
+        </div>
+
+        <!-- ── Acciones ── -->
+        <div class="imp-actions" id="impActions" style="display: none">
+          <button class="btn-importar" id="btnImportar">
+            ⬆ Importar nuevos
+          </button>
+          <button class="btn-limpiar-imp" id="btnLimpiarImp">
+            ✕ Limpiar lista
+          </button>
+        </div>
+
+        <!-- ── Lista de archivos ── -->
+        <section
+          class="archivos-section"
+          id="archivosSection"
+          style="display: none"
+        >
+          <div class="archivos-header">
+            <span class="archivos-title">Archivos cargados</span>
+            <div class="archivos-filtros">
+              <button class="filtro-btn active" data-f="todos">Todos</button>
+              <button class="filtro-btn" data-f="nuevo">Nuevos</button>
+              <button class="filtro-btn" data-f="duplicado">Duplicados</button>
+              <button class="filtro-btn" data-f="error">Errores</button>
+            </div>
+          </div>
+          <div id="listaArchivos"></div>
+        </section>
+      </main>
+    </div>
+
+    <div class="toast-imp" id="toastImp"></div>
+
+    <!-- Modal informativo -->
+    <div class="info-modal" id="infoModal">
+      <div class="info-box" id="infoBox">
+        <div class="info-header">
+          <span class="info-titulo" id="infoTitulo"></span>
+          <button class="info-close" id="infoClose">&times;</button>
+        </div>
+        <div class="info-cuerpo" id="infoCuerpo"></div>
+        <div class="info-footer">
+          <button class="btn-info-ok" id="btnInfoOk">Entendido</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/importar.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const usuario = await requireAuth("importar");
+        if (!usuario) return;
+        renderSidebar("importar", usuario.rol);
+      });
+    </script>
+  </body>
+</html>

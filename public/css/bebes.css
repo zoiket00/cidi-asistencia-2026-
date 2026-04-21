@@ -1,0 +1,542 @@
+/* bebes.css — Base de Datos · Fundación Juanfe */
+
+/* ─── Sección formulario ─── */
+.form-section {
+  background: white;
+  border-radius: 10px;
+  padding: 20px 24px 24px;
+  margin-bottom: 16px;
+  border: 1px solid #eee;
+}
+
+.form-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.form-grid-top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.form-grid-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 2fr;
+  gap: 14px;
+  margin-bottom: 20px;
+  align-items: start;
+}
+
+.form-field label {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.form-field input,
+.form-field select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+  background: white;
+  color: #333;
+  transition: border-color 0.15s;
+}
+
+.form-field input:focus,
+.form-field select:focus {
+  outline: none;
+  border-color: #85da1a;
+}
+
+/* ─── Pills de días ─── */
+.dias-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding-top: 2px;
+}
+
+.dia-pill {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid #ddd;
+  background: white;
+  color: #666;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background 0.13s,
+    border-color 0.13s,
+    color 0.13s;
+}
+
+.dia-pill.active {
+  background: #85da1a;
+  border-color: #85da1a;
+  color: white;
+}
+
+.dia-pill:hover:not(.active) {
+  border-color: #85da1a;
+  color: #2e7d32;
+}
+
+/* ─── Botones del formulario ─── */
+.form-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn-guardar-form {
+  background: #85da1a;
+  color: white;
+  border: none;
+  padding: 9px 22px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.btn-guardar-form:hover {
+  background: #6ab514;
+}
+
+.btn-limpiar-form {
+  background: white;
+  color: #666;
+  border: 1px solid #ddd;
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.13s;
+}
+
+.btn-limpiar-form:hover {
+  background: #f5f5f5;
+}
+
+/* ─── Sección lista ─── */
+.lista-section {
+  background: white;
+  border-radius: 10px;
+  padding: 20px 24px;
+  border: 1px solid #eee;
+}
+
+.lista-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.lista-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+  white-space: nowrap;
+}
+
+.lista-search {
+  flex: 1;
+  max-width: 380px;
+  padding: 7px 14px;
+  border: 1px solid #ddd;
+  border-radius: 999px;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.lista-search:focus {
+  border-color: #85da1a;
+}
+
+/* ─── Card de bebé ─── */
+.bebe-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+  gap: 12px;
+}
+
+.bebe-card:last-child {
+  border-bottom: none;
+}
+.bebe-card:hover {
+  background: #fafff5;
+  margin: 0 -24px;
+  padding: 10px 24px;
+}
+
+.card-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-row1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 3px;
+}
+
+.card-nombre {
+  font-size: 13px;
+  font-weight: 700;
+  color: #222;
+}
+
+.card-meta {
+  font-size: 12px;
+  color: #999;
+}
+
+.card-row2 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.card-madre {
+  font-size: 12px;
+  color: #666;
+}
+
+.card-sep {
+  color: #ccc;
+  font-size: 11px;
+}
+
+.card-dias {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.dia-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: #2e7d32;
+  background: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+
+/* ─── Botones de acción en card ─── */
+.card-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.card-btn-edit,
+.card-btn-del {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #eee;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+  transition:
+    background 0.13s,
+    color 0.13s,
+    border-color 0.13s;
+}
+
+.card-btn-edit:hover {
+  background: #f0fbe6;
+  color: #2e7d32;
+  border-color: #c8e6c9;
+}
+.card-btn-del:hover {
+  background: #ffebee;
+  color: #c62828;
+  border-color: #ffcdd2;
+}
+
+/* ─── Empty ─── */
+.lista-empty {
+  text-align: center;
+  padding: 32px;
+  color: #bbb;
+  font-size: 13px;
+}
+
+/* ─── Paginación ─── */
+.pagination {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.page-btn {
+  padding: 5px 11px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: white;
+  color: #555;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.13s;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: #f0f0f0;
+}
+.page-btn.active {
+  background: #85da1a;
+  border-color: #85da1a;
+  color: white;
+}
+.page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.page-info {
+  font-size: 12px;
+  color: #aaa;
+  margin-right: 4px;
+}
+.page-dots {
+  font-size: 12px;
+  color: #bbb;
+}
+
+/* ─── Modal eliminar ─── */
+.confirm-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirm-modal.open {
+  display: flex;
+}
+
+.confirm-box {
+  background: white;
+  border-radius: 12px;
+  padding: 28px;
+  width: 90%;
+  max-width: 340px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.confirm-icon {
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+.confirm-msg {
+  font-size: 14px;
+  color: #444;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.confirm-msg strong {
+  color: #c62828;
+}
+
+.confirm-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.btn-confirm-no {
+  padding: 8px 20px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: white;
+  color: #666;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn-confirm-si {
+  padding: 8px 20px;
+  border-radius: 6px;
+  border: none;
+  background: #e05555;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.btn-confirm-si:hover {
+  background: #c62828;
+}
+
+/* ─── Toast ─── */
+.toast-bebes {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #2e7d32;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+  z-index: 2000;
+  pointer-events: none;
+}
+
+.toast-bebes.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.toast-bebes.error {
+  background: #c62828;
+}
+
+/* ─── Modal editar ─── */
+.edit-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-modal.open {
+  display: flex;
+}
+
+.edit-box {
+  background: white;
+  border-radius: 12px;
+  padding: 24px 28px 28px;
+  width: 92%;
+  max-width: 500px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  max-height: 92vh;
+  overflow-y: auto;
+}
+
+.edit-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.edit-modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #222;
+}
+
+.edit-modal-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #aaa;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+  transition: color 0.13s;
+}
+
+.edit-modal-close:hover {
+  color: #555;
+}
+
+.edit-field {
+  margin-bottom: 14px;
+}
+
+.edit-field label {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.edit-field input,
+.edit-field select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+  background: white;
+  color: #333;
+  transition: border-color 0.15s;
+}
+
+.edit-field input:focus,
+.edit-field select:focus {
+  outline: none;
+  border-color: #85da1a;
+}
+
+.edit-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+}

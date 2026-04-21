@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard de Asistencia — Fundación Juanfe</title>
+    <link rel="icon" type="image/png" href="img/Logo-Juanfe-verde-1-1.png" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <!-- ── Header full-width ── -->
+    <header class="header">
+      <div class="header-inner">
+        <div class="header-logo">
+          <img
+            src="img/Logo-Juanfe-verde-1-1.png"
+            alt="Juanfe"
+            class="logo-img"
+          />
+          <div class="header-title-wrap">
+            <span class="header-eyebrow">Fundación Juanfe</span>
+            <span class="header-title"
+              >Dashboard
+              <span class="header-title-accent">Asistencia</span></span
+            >
+          </div>
+        </div>
+        <div class="header-divider"></div>
+
+        <!-- Badge estado -->
+        <div class="header-badge">
+          <span class="status-dot"></span>
+          CIDI · EN LÍNEA
+        </div>
+
+        <!-- Spacer -->
+        <div class="header-spacer"></div>
+
+        <!-- Acciones -->
+        <div class="header-actions">
+          <button class="btn-clear-session" onclick="clearSession()">
+            🗑 Borrar sesión
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── Body layout: sidebar + contenido ── -->
+    <div class="body-layout">
+      <aside class="sidebar">
+        <nav class="sidebar-nav"></nav>
+      </aside>
+
+      <main class="main-content">
+        <!-- CARGA DESDE SUPABASE -->
+        <section class="upload-section">
+          <div class="section-label">01 — Cargar datos</div>
+
+          <!-- MODO SUPABASE (principal) -->
+          <div
+            class="drop-zone"
+            id="supabaseZone"
+            style="padding: 20px 28px; cursor: default"
+          >
+            <div id="supabasePrompt">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 16px;
+                  flex-wrap: wrap;
+                "
+              >
+                <div style="font-size: 28px">🗄️</div>
+                <div style="flex: 1; min-width: 200px">
+                  <div class="drop-title" style="margin-bottom: 4px">
+                    Consultar base de datos
+                  </div>
+                  <div class="drop-sub">
+                    Selecciona un rango de fechas para cargar la asistencia
+                    desde Supabase
+                  </div>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    flex-wrap: wrap;
+                  "
+                >
+                  <div style="display: flex; flex-direction: column; gap: 4px">
+                    <label
+                      style="
+                        font-size: 10px;
+                        letter-spacing: 1px;
+                        color: var(--muted);
+                        font-family: &quot;JetBrains Mono&quot;, monospace;
+                        text-transform: uppercase;
+                      "
+                      >Desde</label
+                    >
+                    <input
+                      type="date"
+                      id="fechaDesde"
+                      style="
+                        padding: 7px 12px;
+                        border: 1.5px solid var(--border);
+                        border-radius: 8px;
+                        font-family: &quot;JetBrains Mono&quot;, monospace;
+                        font-size: 12px;
+                        background: var(--surface);
+                        color: var(--text);
+                      "
+                    />
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 4px">
+                    <label
+                      style="
+                        font-size: 10px;
+                        letter-spacing: 1px;
+                        color: var(--muted);
+                        font-family: &quot;JetBrains Mono&quot;, monospace;
+                        text-transform: uppercase;
+                      "
+                      >Hasta</label
+                    >
+                    <input
+                      type="date"
+                      id="fechaHasta"
+                      style="
+                        padding: 7px 12px;
+                        border: 1.5px solid var(--border);
+                        border-radius: 8px;
+                        font-family: &quot;JetBrains Mono&quot;, monospace;
+                        font-size: 12px;
+                        background: var(--surface);
+                        color: var(--text);
+                      "
+                    />
+                  </div>
+                  <button
+                    id="btnCargarBD"
+                    style="
+                      margin-top: 18px;
+                      padding: 8px 20px;
+                      background: var(--green);
+                      color: white;
+                      border: none;
+                      border-radius: 8px;
+                      font-family: &quot;JetBrains Mono&quot;, monospace;
+                      font-size: 12px;
+                      font-weight: 700;
+                      letter-spacing: 0.5px;
+                      cursor: pointer;
+                      white-space: nowrap;
+                    "
+                  >
+                    ⬇ Cargar datos
+                  </button>
+                  <button
+                    id="btnHoy"
+                    style="
+                      margin-top: 18px;
+                      padding: 8px 14px;
+                      background: transparent;
+                      color: var(--green);
+                      border: 1.5px solid var(--green);
+                      border-radius: 8px;
+                      font-family: &quot;JetBrains Mono&quot;, monospace;
+                      font-size: 12px;
+                      font-weight: 700;
+                      cursor: pointer;
+                      white-space: nowrap;
+                    "
+                  >
+                    Hoy
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Estado: datos cargados desde BD -->
+            <div
+              class="file-loaded"
+              id="fileLoaded"
+              style="justify-content: space-between"
+            >
+              <div style="display: flex; align-items: center; gap: 12px">
+                <span style="font-size: 22px">✅</span>
+                <div>
+                  <div class="file-name-pill" style="margin-bottom: 4px">
+                    Datos cargados desde Supabase
+                  </div>
+                  <div class="file-sheet-info" id="fileSheetInfo"></div>
+                </div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  gap: 8px;
+                  flex-wrap: wrap;
+                  align-items: center;
+                "
+              >
+                <button
+                  id="btnCambiarFecha"
+                  style="
+                    font-size: 12px;
+                    padding: 7px 14px;
+                    background: transparent;
+                    color: var(--green);
+                    border: 1.5px solid var(--green);
+                    border-radius: 8px;
+                    font-family: &quot;JetBrains Mono&quot;, monospace;
+                    font-weight: 700;
+                    cursor: pointer;
+                    pointer-events: all;
+                    position: relative;
+                    z-index: 10;
+                  "
+                >
+                  📅 Cambiar rango
+                </button>
+                <button
+                  class="btn-upload"
+                  id="btnAddMore"
+                  style="
+                    font-size: 13px;
+                    padding: 8px 18px;
+                    pointer-events: all;
+                    position: relative;
+                    z-index: 10;
+                  "
+                >
+                  ＋ Añadir Excel
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" multiple />
+
+        <!-- CHIPS DE ARCHIVOS CARGADOS -->
+        <div class="sheet-row" id="sheetRow">
+          <span class="sheet-label">ARCHIVOS:</span>
+          <div
+            id="sheetTabs"
+            style="display: flex; gap: 8px; flex-wrap: wrap"
+          ></div>
+        </div>
+
+        <!-- KPIs MODO 1 DÍA -->
+        <div class="kpi-strip" id="kpiStrip" style="display: none">
+          <div class="kpi kpi-blue">
+            <div class="kpi-label">
+              Inscritos (sesión)
+              <span class="info-tooltip tooltip-right">
+                <span class="info-tooltip-icon">i</span>
+                <span class="info-tooltip-box"
+                  >Bebés registrados en la lista de este día. Es un conteo por
+                  sesión: si un bebé asiste lunes y martes, aparece en ambas
+                  sesiones por separado.</span
+                >
+              </span>
+            </div>
+            <div class="kpi-value" id="kpiTotal">—</div>
+            <div class="kpi-sub" id="kpiDia">—</div>
+          </div>
+          <div class="kpi kpi-green">
+            <div class="kpi-label">
+              Presentes hoy
+              <span class="info-tooltip tooltip-right">
+                <span class="info-tooltip-icon">i</span>
+                <span class="info-tooltip-box"
+                  >Bebés que asistieron al CIDI este día (Asistencia =
+                  Sí).</span
+                >
+              </span>
+            </div>
+            <div class="kpi-value" id="kpiPresentes">—</div>
+            <div class="kpi-sub" id="kpiPresentePct">—</div>
+          </div>
+          <div class="kpi kpi-red">
+            <div class="kpi-label">
+              Ausentes hoy
+              <span class="info-tooltip tooltip-right">
+                <span class="info-tooltip-icon">i</span>
+                <span class="info-tooltip-box"
+                  >Bebés inscritos que no asistieron este día. Pueden tener
+                  reporte de causa.</span
+                >
+              </span>
+            </div>
+            <div class="kpi-value" id="kpiAusentes">—</div>
+            <div class="kpi-sub" id="kpiAusentePct">—</div>
+          </div>
+          <div class="kpi kpi-orange">
+            <div class="kpi-label">
+              Con reporte
+              <span class="info-tooltip tooltip-right">
+                <span class="info-tooltip-icon">i</span>
+                <span class="info-tooltip-box"
+                  >Ausencias justificadas con causa registrada (enfermedad, cita
+                  médica, etc.).</span
+                >
+              </span>
+            </div>
+            <div class="kpi-value" id="kpiReportes">—</div>
+            <div class="kpi-sub">ausencias justificadas</div>
+          </div>
+          <div class="kpi kpi-blue">
+            <div class="kpi-label">
+              Extras
+              <span class="info-tooltip tooltip-right">
+                <span class="info-tooltip-icon">i</span>
+                <span class="info-tooltip-box"
+                  >Bebés visitantes que no pertenecen al grupo regular del día
+                  pero asistieron.</span
+                >
+              </span>
+            </div>
+            <div class="kpi-value" id="kpiExtras">—</div>
+            <div class="kpi-sub">visitantes del día</div>
+          </div>
+          <div class="kpi kpi-purple">
+            <div class="kpi-label">
+              No CIDI
+              <span class="info-tooltip tooltip-right">
+                <span class="info-tooltip-icon">i</span>
+                <span class="info-tooltip-box"
+                  >Bebés que asistieron pero no están inscritos en el programa
+                  CIDI.</span
+                >
+              </span>
+            </div>
+            <div class="kpi-value" id="kpiNocidi">—</div>
+            <div class="kpi-sub">fuera del programa</div>
+          </div>
+        </div>
+
+        <!-- KPIs MODO VARIOS DÍAS -->
+        <div class="kpi-strip" id="kpiStripMulti" style="display: none">
+          <div class="kpi kpi-blue">
+            <div class="kpi-label">
+              Bebés únicos
+              <span class="info-tooltip tooltip-right">
+                <span class="info-tooltip-icon">i</span>
+                <span class="info-tooltip-box"
+                  >Bebés distintos en el período. A diferencia de
+                  "Inscripciones" en la tabla por día, aquí un bebé que asiste
+                  lunes y martes cuenta solo UNA vez.</span
+                >
+              </span>
+            </div>
+            <div class="kpi-value" id="kpiTotalMulti">—</div>
+            <div class="kpi-sub" id="kpiDiasMulti">—</div>
+          </div>
+          <div class="kpi kpi-green">
+            <div class="kpi-label">
+              Tasa promedio
+              <span class="info-tooltip tooltip-right">
+                <span class="info-tooltip-icon">i</span>
+                <span class="info-tooltip-box"
+                  >Promedio de asistencia por sesión: total de presencias ÷
+                  total de inscripciones en todos los días. Mide qué tan lleno
+                  estuvo el CIDI en promedio.</span
+                >
+              </span>
+            </div>
+            <div class="kpi-value" id="kpiTasaMulti">—</div>
+            <div class="kpi-sub">de asistencia real</div>
+          </div>
+          <div class="kpi kpi-green">
+            <div class="kpi-label">
+              Mejor día
+              <span class="info-tooltip tooltip-right">
+                <span class="info-tooltip-icon">i</span>
+                <span class="info-tooltip-box"
+                  >La sesión con la tasa de asistencia más alta del
+                  período.</span
+                >
+              </span>
+            </div>
+            <div class="kpi-value" id="kpiMejorDia">—</div>
+            <div class="kpi-sub" id="kpiMejorDiaNombre">—</div>
+          </div>
+          <div class="kpi kpi-red">
+            <div class="kpi-label">
+              Peor día
+              <span class="info-tooltip tooltip-right">
+                <span class="info-tooltip-icon">i</span>
+                <span class="info-tooltip-box"
+                  >La sesión con la tasa de asistencia más baja del período.
+                  Útil para identificar días problemáticos.</span
+                >
+              </span>
+            </div>
+            <div class="kpi-value" id="kpiPeorDia">—</div>
+            <div class="kpi-sub" id="kpiPeorDiaNombre">—</div>
+          </div>
+          <div class="kpi kpi-red">
+            <div class="kpi-label">
+              Sin asistir
+              <span class="info-tooltip tooltip-right">
+                <span class="info-tooltip-icon">i</span>
+                <span class="info-tooltip-box"
+                  >Bebés que aparecen en el sistema pero no asistieron ningún
+                  día del período. Requieren seguimiento urgente 🚨</span
+                >
+              </span>
+            </div>
+            <div class="kpi-value" id="kpiNuncaMulti">—</div>
+            <div class="kpi-sub">nunca vinieron 🚨</div>
+          </div>
+          <div class="kpi kpi-orange">
+            <div class="kpi-label">
+              Con reporte
+              <span class="info-tooltip tooltip-right">
+                <span class="info-tooltip-icon">i</span>
+                <span class="info-tooltip-box"
+                  >Bebés únicos que tienen al menos una ausencia justificada con
+                  causa registrada en el período.</span
+                >
+              </span>
+            </div>
+            <div class="kpi-value" id="kpiReportesMulti">—</div>
+            <div class="kpi-sub">ausencias justificadas</div>
+          </div>
+        </div>
+
+        <!-- TABLA RESUMEN POR DÍA (solo modo multi) -->
+        <div
+          id="kpiResumenDias"
+          style="display: none; margin: 0 0 18px 0"
+        ></div>
+
+        <!-- FILTROS + BUSCADOR BEBÉ -->
+        <div class="filters-row" id="filtersRow">
+          <span class="filter-label">VER:</span>
+          <button class="filter-btn active" data-filter="todos">Todos</button>
+          <button class="filter-btn" data-filter="presentes">
+            ✅ Presentes
+          </button>
+          <button class="filter-btn" data-filter="ausentes">❌ Ausentes</button>
+          <button class="filter-btn" data-filter="reportados">
+            ⚠️ Reportados
+          </button>
+          <button class="filter-btn" data-filter="extras">🔵 Extras</button>
+          <button class="filter-btn" data-filter="nocidi">🟣 No CIDI</button>
+        </div>
+
+        <!-- BUSCADOR BEBÉ (autocomplete) -->
+        <div class="baby-search-section" id="babySection">
+          <div class="baby-search-head">BUSCAR BEBÉ — historial individual</div>
+          <div class="baby-autocomplete-wrap">
+            <div class="baby-input-wrap">
+              <span class="baby-input-icon">🔍</span>
+              <input
+                type="text"
+                id="babySearch"
+                class="baby-input"
+                placeholder="Escribe el nombre del bebé..."
+                autocomplete="off"
+              />
+              <div id="babyDropdown" class="baby-dropdown"></div>
+            </div>
+
+            <!-- Tag del bebé seleccionado -->
+            <div
+              id="selectedBabyTag"
+              class="selected-baby-tag"
+              style="display: none"
+            >
+              <span class="selected-baby-dot"></span>
+              <span id="selectedBabyName"></span>
+              <button
+                id="btnClearBaby"
+                class="clear-baby-btn"
+                title="Quitar selección"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- EMPTY STATE -->
+        <div class="empty" id="emptyState">
+          <span class="empty-icon">📋</span>
+          <h3>Sin datos cargados</h3>
+          <p>
+            Sube el archivo Excel exportado desde el sistema de asistencia<br />para
+            empezar a ver las estadísticas
+          </p>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div class="dashboard-grid" id="dashGrid"></div>
+      </main>
+
+      <div class="toast" id="toast"></div>
+      <div class="loading" id="loading">
+        <div class="loading-inner">
+          <div class="spinner"></div>
+          <div class="loading-text">PROCESANDO...</div>
+        </div>
+      </div>
+
+      <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+      <script src="js/auth.js"></script>
+      <script src="js/dashboard.js"></script>
+      <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+          const usuario = await requireAuth("dashboard");
+          if (!usuario) return;
+          renderSidebar("dashboard", usuario.rol);
+        });
+      </script>
+    </div>
+    <!-- /.body-layout -->
+  </body>
+</html>
