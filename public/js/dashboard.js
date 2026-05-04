@@ -1139,6 +1139,7 @@ function showUI() {
     btn.id = "btnConsolidar";
     btn.title =
       "Exporta una tabla única limpia y sin duplicados, lista para dashboards";
+    btn.textContent = "⬇ Exportar consolidado";
     btn.style.cssText = `
       display:inline-flex; align-items:center; gap:8px;
       padding:7px 16px; border-radius:8px; cursor:pointer;
@@ -1147,6 +1148,11 @@ function showUI() {
       font-size:11px; font-weight:700; letter-spacing:.5px;
       transition:opacity .15s; white-space:nowrap; margin-left:8px;
     `;
+    btn.addEventListener("click", () => exportarTablaConsolidada());
+
+    // Agregar al área de info del archivo cargado
+    const fileInfo = document.getElementById("fileSheetInfo");
+    if (fileInfo?.parentElement) fileInfo.parentElement.appendChild(btn);
   }
 }
 
@@ -1977,7 +1983,6 @@ function buildChartUbicacion(data) {
     Otro: { color: NARANJA, count: 0 },
   };
   // Valores conocidos — cualquier otra cosa distinta de vacío va a "Otro"
-  const CONOCIDOS = ["juanfe", "casa"];
   data.forEach((r) => {
     const raw = norm(String(r[cUbic] || "").trim());
     if (!raw) return; // ignorar vacíos
