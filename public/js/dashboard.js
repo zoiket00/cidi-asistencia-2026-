@@ -506,7 +506,17 @@ function initDashboard() {
   setupFilters();
   setupBabySearch();
   setupSupabaseLoader();
-  restaurarUltimoRango();
+
+  // Orden de restauración:
+  // 1. Si hay un rango de fechas guardado → carga desde Supabase (prioridad)
+  // 2. Si no hay rango pero hay Excels en IndexedDB → restaura los archivos manuales
+  // Antes solo corría restaurarUltimoRango() y los Excels manuales se perdían al recargar.
+  const tieneRango = !!localStorage.getItem(LS_RANGO_KEY);
+  if (tieneRango) {
+    restaurarUltimoRango();
+  } else {
+    restoreSession();
+  }
 }
 
 /** Configura los botones y fechas del panel de carga desde Supabase */
