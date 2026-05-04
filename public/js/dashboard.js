@@ -333,8 +333,8 @@ let headers = [];
 let charts = {};
 /** Filtro activo en el menú de vistas */
 let activeFilter = "todos";
-/** Nombre del bebé seleccionado para historial individual (null = vista general) */
-let selectedBaby = null;
+/** Nombre+madre del bebé seleccionado para historial individual (null = vista general) */
+let selectedBaby = null; // { nombre, madre } | null
 /** Metadatos de archivos cargados en sesión */
 let loadedFiles = [];
 
@@ -1214,8 +1214,18 @@ function setupBabySearch() {
 }
 
 function selectBaby(name) {
-  selectedBaby = name;
-  document.getElementById("selectedBabyName").textContent = name;
+  // Buscar la madre del bebé en el modelo para construir la clave compuesta.
+  // Sin esto, dos bebés con el mismo nombre pero diferente madre se mezclan
+  // en el historial individual.
+  const perfil = UnifiedModel.getBabyNames().includes(name)
+    ? Array.from(UnifiedModel.getAll()).find((r) => val(r, "bebe") === name)
+    : null;
+  const madre = perfil ? val(perfil, "madre") : "";
+
+  selectedBaby = { nombre: name, madre };
+  document.getElementById("selectedBabyName").textContent = madre
+    ? `${name} · ${madre}`
+    : name;
   document.getElementById("selectedBabyTag").style.display = "flex";
   rebuildAll();
 }
@@ -1236,9 +1246,14 @@ function rebuildAll() {
   updateKPIs(resumenCompleto, allData);
 
   if (selectedBaby) {
-    // Vista de historial individual
+    // Vista de historial individual — filtrar por nombre+madre para distinguir homónimos.
+    // Antes filtraba solo por nombre → dos bebés con el mismo nombre se mezclaban.
     const registrosDelBebe = getAllRegistros(
-      allData.filter((r) => val(r, "bebe") === selectedBaby),
+      allData.filter(
+        (r) =>
+          val(r, "bebe") === selectedBaby.nombre &&
+          norm(val(r, "madre") || "") === norm(selectedBaby.madre || ""),
+      ),
     );
     buildBabyHistorial(registrosDelBebe);
   } else {
@@ -1258,10 +1273,12 @@ function updateKPIs(resumen, todosLosRegistros) {
   const fechasUnicas = [
     ...new Set(todosLosRegistros.map((r) => val(r, "fecha")).filter(Boolean)),
   ];
-  const esModoUnDia =
-    loadedFiles.length === 1 ||
-    diasUnicos.length === 1 ||
-    fechasUnicas.length === 1;
+  // ANTES: usaba loadedFiles.length === 1 || diasUnicos.length === 1 || fechasUnicas.length === 1
+  // PROBLEMA: si se cargaba lunes-viernes de la misma semana desde Supabase,
+  // loadedFiles.length era 5 (uno por día) pero fechasUnicas.length === 1 (misma fecha)
+  // → entraba en modo 1 día incorrectamente y ocultaba la tabla resumen por días.
+  // AHORA: solo es modo 1 día si hay exactamente 1 fecha única Y 1 día único.
+  const esModoUnDia = fechasUnicas.length <= 1 && diasUnicos.length <= 1;
 
   const kpiStrip1 = document.getElementById("kpiStrip");
   const kpiStripM = document.getElementById("kpiStripMulti");
@@ -2618,7 +2635,7 @@ function buildBabyHistorial(data) {
     <div style="padding:22px 26px 18px;display:flex;flex-wrap:wrap;gap:20px;justify-content:space-between;align-items:flex-start">
       <div style="flex:1;min-width:260px">
         <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2.5px;color:var(--muted);margin-bottom:8px">👶 PERFIL DEL BEBÉ</div>
-        <div style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:12px">${selectedBaby}</div>
+        <div style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:12px">${selectedBaby?.nombre ?? selectedBaby}</div>
         <div style="display:flex;flex-wrap:wrap;gap:7px">
           ${madre ? CHIP("👩", madre, "var(--green-soft)", "var(--green-dark)") : ""}
           ${inst ? CHIP("🏛", inst, "var(--surface2)", "var(--text-mid)") : ""}
