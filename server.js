@@ -224,7 +224,7 @@ app.get("/api/bebes", async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("bebes")
-      .select("id, nombre_bebe, nombre_madre, fase, programa, edad")
+      .select("nombre_bebe, nombre_madre, fase, programa, edad")
       .order("nombre_bebe", { ascending: true })
       .limit(5000);
     if (error) throw error;
@@ -236,7 +236,6 @@ app.get("/api/bebes", async (req, res) => {
 
     res.json({
       bebes: data.map((b) => ({
-        id: b.id,
         NombreBebe: b.nombre_bebe,
         NombreMadre: b.nombre_madre,
         Fase: b.fase,
@@ -605,7 +604,7 @@ app.get("/api/asistencia", async (req, res) => {
       .select("*")
       .order("fecha", { ascending: true })
       .order("nombre_bebe", { ascending: true })
-      .limit(10000);
+      .limit(50000); // ~1.5 años de datos con 119 bebés activos
 
     if (fecha) query = query.eq("fecha", fecha);
     if (dia) query = query.eq("dia", dia);

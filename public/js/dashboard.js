@@ -40,6 +40,16 @@
 //  1. MODELO DE DATOS UNIFICADO
 // =============================================================================
 
+// Función de normalización compartida por UnifiedModel y el resto del dashboard.
+// Definida aquí (antes del IIFE) para evitar la doble implementación que existía antes.
+function norm(str = "") {
+  return String(str)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
 const UnifiedModel = (() => {
   // ---------------------------------------------------------------------------
   //  Mapeo de variantes de columna → nombre canónico
@@ -95,13 +105,9 @@ const UnifiedModel = (() => {
     no_cidi: "NoCidi",
   };
 
-  /** Normaliza texto: minúsculas + sin tildes + sin espacios extras */
+  /** Normaliza texto — usa la función global norm() definida antes del IIFE */
   function _norm(str = "") {
-    return String(str)
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .trim();
+    return norm(str);
   }
 
   /** Convierte una columna raw → nombre canónico, o null si no se reconoce */
@@ -585,12 +591,26 @@ async function cargarDesdeSupabase(desde, hasta) {
 
     const res = await authFetch(url);
     if (!res.ok) throw new Error(`Error ${res.status}`);
-    const { registros, total } = await res.json();
 
-    if (!total || !registros?.length) {
+    // Fix #9: manejar respuesta con formato inesperado o registros null
+    // Antes: si el servidor devolvía { registros: null, total: 0 } el for..of explotaba
+    const json = await res.json();
+    const registros = Array.isArray(json.registros) ? json.registros : [];
+    const total = json.total ?? registros.length;
+
+    if (!total || !registros.length) {
       showLoading(false);
       showToast("No hay registros en ese rango de fechas", true);
       return;
+    }
+
+    // Fix #10: avisar al usuario si se alcanzó el límite de 10.000 registros del servidor
+    // Sin este aviso, el dashboard muestra datos incompletos sin ninguna advertencia
+    if (registros.length >= 50000) {
+      showToast(
+        "⚠️ Se cargaron 50.000 registros (límite máximo). Acota el rango de fechas para ver datos completos.",
+        true,
+      );
     }
 
     // Limpiar modelo anterior y cargar los nuevos registros
@@ -974,15 +994,6 @@ window.clearSession = function () {
 //  5. NORMALIZACIÓN Y UTILIDADES DE DATOS
 // =============================================================================
 
-/** Normaliza texto: minúsculas + sin tildes */
-function norm(str) {
-  return String(str)
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
-}
-
 /** Resuelve el nombre de columna canónico para un tipo de dato */
 function colKey(tipo) {
   return (COL[tipo] || []).find((c) => headers.includes(c)) || null;
@@ -1133,27 +1144,7 @@ function showUI() {
   document.getElementById("fileSheetInfo").textContent =
     `${bebesUnicos} bebés · ${registrosUnicos} registros · ${loadedFiles.length} archivo(s)`;
 
-  // Botón de exportación consolidada (ETL) — se inyecta una sola vez
-  if (!document.getElementById("btnConsolidar")) {
-    const btn = document.createElement("button");
-    btn.id = "btnConsolidar";
-    btn.title =
-      "Exporta una tabla única limpia y sin duplicados, lista para dashboards";
-    btn.textContent = "⬇ Exportar consolidado";
-    btn.style.cssText = `
-      display:inline-flex; align-items:center; gap:8px;
-      padding:7px 16px; border-radius:8px; cursor:pointer;
-      border:1.5px solid var(--green); background:var(--green);
-      color:white; font-family:'JetBrains Mono',monospace;
-      font-size:11px; font-weight:700; letter-spacing:.5px;
-      transition:opacity .15s; white-space:nowrap; margin-left:8px;
-    `;
-    btn.addEventListener("click", () => exportarTablaConsolidada());
-
-    // Agregar al área de info del archivo cargado
-    const fileInfo = document.getElementById("fileSheetInfo");
-    if (fileInfo?.parentElement) fileInfo.parentElement.appendChild(btn);
-  }
+  // Botón de exportación consolidada eliminado — no se usa en el flujo actual.
 }
 
 function setupFilters() {
