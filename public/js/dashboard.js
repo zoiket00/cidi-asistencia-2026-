@@ -409,15 +409,22 @@ const PALETTE = [
 const LS_KEY = "juanfe_dash_v4_meta";
 const IDB_NAME = "juanfe_dash_v4";
 const IDB_STORE = "archivos";
+const IDB_VERSION = 2; // Incrementar aquí si se agregan nuevos stores en el futuro
 let _idb = null;
 
 /** Abre (o reutiliza) la conexión a IndexedDB */
 function openIDB() {
   if (_idb) return Promise.resolve(_idb);
   return new Promise((res, rej) => {
-    const req = indexedDB.open(IDB_NAME, 1);
-    req.onupgradeneeded = (e) =>
-      e.target.result.createObjectStore(IDB_STORE, { keyPath: "name" });
+    const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      // Crear el store si no existe — esto corre tanto en instalación nueva
+      // como cuando se incrementa IDB_VERSION, sin romper datos existentes
+      if (!db.objectStoreNames.contains(IDB_STORE)) {
+        db.createObjectStore(IDB_STORE, { keyPath: "name" });
+      }
+    };
     req.onsuccess = (e) => {
       _idb = e.target.result;
       res(_idb);
@@ -513,10 +520,15 @@ function initDashboard() {
   setupBabySearch();
   setupSupabaseLoader();
 
+  // Botón "Borrar sesión" — conectado aquí con addEventListener
+  // en lugar del onclick inline que tenía en el HTML (patrón antiguo)
+  document
+    .getElementById("btnClearSession")
+    ?.addEventListener("click", clearSession);
+
   // Orden de restauración:
   // 1. Si hay un rango de fechas guardado → carga desde Supabase (prioridad)
   // 2. Si no hay rango pero hay Excels en IndexedDB → restaura los archivos manuales
-  // Antes solo corría restaurarUltimoRango() y los Excels manuales se perdían al recargar.
   const tieneRango = !!localStorage.getItem(LS_RANGO_KEY);
   if (tieneRango) {
     restaurarUltimoRango();
@@ -942,7 +954,7 @@ async function restoreSession() {
 }
 
 /** Limpia toda la sesión */
-window.clearSession = function () {
+function clearSession() {
   localStorage.removeItem(LS_RANGO_KEY);
   clearAllStorage();
   UnifiedModel.clear();
@@ -988,7 +1000,7 @@ window.clearSession = function () {
     .querySelectorAll(".filter-btn")
     .forEach((b) => b.classList.toggle("active", b.dataset.filter === "todos"));
   fileInput.value = "";
-};
+}
 
 // =============================================================================
 //  5. NORMALIZACIÓN Y UTILIDADES DE DATOS
