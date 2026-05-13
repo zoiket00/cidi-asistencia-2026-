@@ -24,6 +24,7 @@
 require("dotenv").config();
 const express = require("express");
 const path = require("path");
+const XLSX = require("xlsx"); // Generación de Excel en el servidor para /api/exportar
 const { createClient } = require("@supabase/supabase-js");
 
 // ── Validar entorno antes de arrancar ──────────────────────────────────────────
@@ -642,6 +643,132 @@ app.get("/api/asistencia", async (req, res) => {
   } catch (err) {
     console.error("Error GET /api/asistencia:", err.message);
     res.status(500).json({ error: "No se pudo obtener la asistencia" });
+  }
+});
+
+/**
+ * GET /api/exportar
+ * Genera o previsualiza un Excel de registros_asistencia filtrado por rango de fechas.
+ * Solo accesible para admin y coordinadora (verificado por rol en tabla usuarios).
+ *
+ * Query params:
+ *   desde      YYYY-MM-DD  (requerido)
+ *   hasta      YYYY-MM-DD  (requerido)
+ *   programa   string      (opcional)
+ *   fase       string      (opcional)
+ *   dia        string      (opcional)
+ *   preview    "true"      → devuelve JSON con primeras 15 filas + total
+ */
+app.get("/api/exportar", async (req, res) => {
+  try {
+    const { desde, hasta, programa, fase, dia, preview } = req.query;
+
+    if (!desde || !hasta) {
+      return res
+        .status(400)
+        .json({ error: "Los parámetros desde y hasta son requeridos" });
+    }
+
+    // Verificar que el usuario es admin o coordinadora
+    const { data: usuario } = await supabase
+      .from("usuarios")
+      .select("rol")
+      .eq("id", req.user.id)
+      .single();
+
+    if (!usuario || !["admin", "coordinadora"].includes(usuario.rol)) {
+      return res
+        .status(403)
+        .json({ error: "Solo admin y coordinadora pueden exportar registros" });
+    }
+
+    // Construir query con filtros opcionales
+    let query = supabase
+      .from("registros_asistencia")
+      .select("*")
+      .gte("fecha", desde)
+      .lte("fecha", hasta)
+      .order("fecha", { ascending: true })
+      .order("dia", { ascending: true })
+      .order("nombre_bebe", { ascending: true })
+      .limit(50000);
+
+    if (programa) query = query.eq("programa", programa);
+    if (fase) query = query.eq("fase", fase);
+    if (dia) query = query.eq("dia", dia);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    // Mapear columnas al formato exacto del Excel de las profesoras
+    const mapearFila = (r) => ({
+      Fecha: r.fecha,
+      Dia: r.dia,
+      "Nombre Bebé": r.nombre_bebe,
+      "Nombre Madre": r.nombre_madre,
+      Institución: r.fase,
+      Programa: r.programa,
+      "Edad (meses)": r.edad,
+      Asistencia: r.asistencia,
+      Ubicación: r.ubicacion,
+      Reporte: r.reporte,
+      "Situación Específica": r.situacion_especifica,
+      Nota: r.nota,
+      Extras: r.extras,
+      "No CIDI": r.no_cidi,
+    });
+
+    // Modo preview — devuelve JSON con primeras 15 filas y total
+    if (preview === "true") {
+      return res.json({
+        total: data.length,
+        filas: data.slice(0, 15).map(mapearFila),
+      });
+    }
+
+    // Modo descarga — genera Excel con mismo formato que las profesoras
+    const filas = data.map(mapearFila);
+    const ws = XLSX.utils.json_to_sheet(filas);
+
+    ws["!cols"] = [
+      { wch: 12 }, // Fecha
+      { wch: 11 }, // Dia
+      { wch: 30 }, // Nombre Bebé
+      { wch: 30 }, // Nombre Madre
+      { wch: 9 }, // Institución
+      { wch: 24 }, // Programa
+      { wch: 13 }, // Edad (meses)
+      { wch: 11 }, // Asistencia
+      { wch: 11 }, // Ubicación
+      { wch: 9 }, // Reporte
+      { wch: 26 }, // Situación Específica
+      { wch: 20 }, // Nota
+      { wch: 8 }, // Extras
+      { wch: 8 }, // No CIDI
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Asistencia");
+
+    const nombreArchivo = `juanfe_asistencia_${desde}_${hasta}.xlsx`;
+    const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${nombreArchivo}"`,
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.send(buffer);
+
+    console.log(
+      `✅ Exportado: ${data.length} registros ${desde} → ${hasta} por ${usuario.rol}`,
+    );
+  } catch (err) {
+    console.error("Error GET /api/exportar:", err.message);
+    res.status(500).json({ error: "Error generando exportación" });
   }
 });
 

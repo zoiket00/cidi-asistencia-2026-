@@ -120,6 +120,84 @@
           </div>
           <div id="listaArchivos"></div>
         </section>
+
+        <!-- ── Divisor ── -->
+        <div class="exp-divisor" id="expDivisor" style="display:none">
+          <span class="exp-divisor-label">Exportar registros</span>
+        </div>
+
+        <!-- ── Sección Exportar (solo admin y coordinadora) ── -->
+        <section class="exp-section" id="expSection" style="display:none">
+          <div class="exp-title">Descargar historial de asistencia</div>
+          <div class="exp-sub">
+            Selecciona el rango de fechas y los filtros opcionales. Puedes
+            previsualizar los datos antes de descargar.
+          </div>
+
+          <!-- Filtros -->
+          <div class="exp-filtros">
+            <div class="exp-field">
+              <label>Fecha inicio</label>
+              <input type="date" id="expDesde" />
+            </div>
+            <div class="exp-field">
+              <label>Fecha fin</label>
+              <input type="date" id="expHasta" />
+            </div>
+            <div class="exp-field">
+              <label>Programa</label>
+              <select id="expPrograma">
+                <option value="">Todos</option>
+                <option value="Hotelería">Hotelería</option>
+                <option value="Cocina">Cocina</option>
+                <option value="Belleza">Belleza</option>
+                <option value="Auxiliar Administrativo">Auxiliar Administrativo</option>
+              </select>
+            </div>
+            <div class="exp-field">
+              <label>Fase</label>
+              <select id="expFase">
+                <option value="">Todas</option>
+                <option value="UTE">UTE</option>
+                <option value="ULA 1">ULA 1</option>
+                <option value="ULA 2">ULA 2</option>
+                <option value="TSF">TSF</option>
+              </select>
+            </div>
+            <div class="exp-field">
+              <label>Día</label>
+              <select id="expDia">
+                <option value="">Todos</option>
+                <option value="Lunes">Lunes</option>
+                <option value="Martes">Martes</option>
+                <option value="Miercoles">Miércoles</option>
+                <option value="Jueves">Jueves</option>
+                <option value="Viernes">Viernes</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Acciones -->
+          <div class="exp-acciones">
+            <button class="btn-exp-preview" id="btnExpPreview">
+              👁 Vista previa
+            </button>
+            <button class="btn-exp-descargar" id="btnExpDescargar" disabled>
+              ↓ Descargar Excel
+            </button>
+          </div>
+
+          <!-- Vista previa -->
+          <div class="exp-preview-wrap" id="expPreviewWrap" style="display:none">
+            <div class="exp-preview-header">
+              <span class="exp-preview-total" id="expPreviewTotal"></span>
+              <span class="exp-preview-hint">Mostrando primeras 15 filas</span>
+            </div>
+            <div class="exp-tabla-wrap">
+              <table class="exp-tabla" id="expTabla"></table>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
 
@@ -148,6 +226,7 @@
         const usuario = await requireAuth("importar");
         if (!usuario) return;
         renderSidebar("importar", usuario.rol);
+        initExportar(usuario.rol);
       });
     </script>
   </body>

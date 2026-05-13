@@ -553,3 +553,164 @@ function toast(msg, error = false) {
   t.className = "toast-imp show" + (error ? " error" : "");
   setTimeout(() => t.classList.remove("show"), 4000);
 }
+
+// =============================================================================
+//  EXPORTAR — solo admin y coordinadora
+// =============================================================================
+
+/**
+ * initExportar(rol)
+ * Muestra u oculta la sección de exportar según el rol.
+ * Conecta los eventos de vista previa y descarga.
+ */
+function initExportar(rol) {
+  if (!["admin", "coordinadora"].includes(rol)) return;
+
+  // Mostrar divisor y sección
+  document.getElementById("expDivisor").style.display = "flex";
+  document.getElementById("expSection").style.display = "block";
+
+  // Fecha por defecto: mes actual
+  const hoy = new Date();
+  const primerDia = new Date(hoy.getFullYear(), hoy.getMonth(), 1)
+    .toISOString()
+    .slice(0, 10);
+  const ultimoDia = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0)
+    .toISOString()
+    .slice(0, 10);
+  document.getElementById("expDesde").value = primerDia;
+  document.getElementById("expHasta").value = ultimoDia;
+
+  document
+    .getElementById("btnExpPreview")
+    .addEventListener("click", cargarPreview);
+  document
+    .getElementById("btnExpDescargar")
+    .addEventListener("click", descargarExcel);
+}
+
+/** Construye la URL de exportar con los filtros actuales */
+function buildExpUrl(extra = "") {
+  const desde = document.getElementById("expDesde").value;
+  const hasta = document.getElementById("expHasta").value;
+  const programa = document.getElementById("expPrograma").value;
+  const fase = document.getElementById("expFase").value;
+  const dia = document.getElementById("expDia").value;
+
+  if (!desde || !hasta) {
+    toast("Selecciona fecha inicio y fecha fin", true);
+    return null;
+  }
+  if (desde > hasta) {
+    toast("La fecha inicio no puede ser mayor a la fecha fin", true);
+    return null;
+  }
+
+  const params = new URLSearchParams({ desde, hasta });
+  if (programa) params.append("programa", programa);
+  if (fase) params.append("fase", fase);
+  if (dia) params.append("dia", dia);
+  if (extra) params.append(extra, "true");
+
+  return `/api/exportar?${params.toString()}`;
+}
+
+/** Carga la vista previa — primeras 15 filas + total */
+async function cargarPreview() {
+  const url = buildExpUrl("preview");
+  if (!url) return;
+
+  const btn = document.getElementById("btnExpPreview");
+  btn.textContent = "Cargando...";
+  btn.disabled = true;
+
+  try {
+    const res = await authFetch(url);
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || "Error cargando preview");
+    if (!data.total) {
+      toast("No hay registros en ese rango y filtros seleccionados", true);
+      document.getElementById("expPreviewWrap").style.display = "none";
+      document.getElementById("btnExpDescargar").disabled = true;
+      return;
+    }
+
+    // Renderizar tabla
+    renderTablaPreview(data.filas, data.total);
+    document.getElementById("btnExpDescargar").disabled = false;
+    toast(`✓ ${data.total} registros encontrados`);
+  } catch (e) {
+    toast("Error: " + e.message, true);
+  } finally {
+    btn.textContent = "👁 Vista previa";
+    btn.disabled = false;
+  }
+}
+
+/** Renderiza la tabla de vista previa */
+function renderTablaPreview(filas, total) {
+  const wrap = document.getElementById("expPreviewWrap");
+  const tabla = document.getElementById("expTabla");
+  const totalEl = document.getElementById("expPreviewTotal");
+
+  totalEl.textContent = `${total.toLocaleString()} registros en total`;
+
+  if (!filas.length) {
+    wrap.style.display = "none";
+    return;
+  }
+
+  const cols = Object.keys(filas[0]);
+
+  const thead = `<thead><tr>${cols.map((c) => `<th>${c}</th>`).join("")}</tr></thead>`;
+  const tbody =
+    "<tbody>" +
+    filas
+      .map(
+        (f) => `<tr>${cols.map((c) => `<td>${f[c] ?? ""}</td>`).join("")}</tr>`,
+      )
+      .join("") +
+    "</tbody>";
+
+  tabla.innerHTML = thead + tbody;
+  wrap.style.display = "block";
+}
+
+/** Descarga el Excel generado por el servidor */
+async function descargarExcel() {
+  const url = buildExpUrl();
+  if (!url) return;
+
+  const btn = document.getElementById("btnExpDescargar");
+  btn.textContent = "Generando...";
+  btn.disabled = true;
+
+  try {
+    const res = await authFetch(url);
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Error generando Excel");
+    }
+
+    // Descargar el archivo desde la respuesta binaria
+    const blob = await res.blob();
+    const nombreArchivo =
+      res.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] ||
+      `juanfe_asistencia.xlsx`;
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = nombreArchivo;
+    a.click();
+    URL.revokeObjectURL(a.href);
+
+    toast("✓ Excel descargado correctamente");
+  } catch (e) {
+    toast("Error: " + e.message, true);
+  } finally {
+    btn.textContent = "↓ Descargar Excel";
+    btn.disabled = false;
+  }
+}
