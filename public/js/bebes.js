@@ -12,8 +12,7 @@ const PAGE_SIZE = 30;
 
 let allBebes = [],
   filtered = [],
-  currentPage = 1,
-  deletingId = null;
+  currentPage = 1;
 
 async function cargar() {
   try {
@@ -188,20 +187,29 @@ async function guardarEditar() {
     edad: document.getElementById("eEdad").value,
     dias,
   };
-  try {
-    const res = await authFetch(`/api/bebes/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.error);
-    cerrarModalEditar();
-    toast("Registro actualizado ✓");
-    await cargar();
-  } catch (e) {
-    toast("Error: " + e.message, true);
-  }
+
+  cerrarModalEditar();
+  showMiniModal({
+    title: "¿Guardar cambios?",
+    desc: `<strong>${nombre_bebe}</strong><br><span style="color:#888">${nombre_madre}</span>`,
+    confirmText: "Guardar cambios",
+    color: "green",
+    onConfirm: async () => {
+      try {
+        const res = await authFetch(`/api/bebes/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+        toast("Registro actualizado ✓");
+        await cargar();
+      } catch (e) {
+        toast("Error: " + e.message, true);
+      }
+    },
+  });
 }
 
 function limpiar() {
@@ -236,38 +244,49 @@ async function guardar() {
       (p) => p.dataset.dia,
     ),
   };
-  try {
-    const res = await authFetch(id ? `/api/bebes/${id}` : "/api/bebes", {
-      method: id ? "PUT" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.error);
-    toast(id ? "Registro actualizado ✓" : "Registro guardado ✓");
-    limpiar();
-    await cargar();
-  } catch (e) {
-    toast("Error: " + e.message, true);
-  }
+
+  const accion = id ? "Guardar cambios" : "Registrar bebé";
+  const desc = `<strong>${nombre_bebe}</strong><br><span style="color:#888">${nombre_madre}</span>`;
+
+  showMiniModal({
+    title: id ? "¿Guardar cambios?" : "¿Confirmar nuevo registro?",
+    desc,
+    confirmText: accion,
+    color: "green",
+    onConfirm: async () => {
+      try {
+        const res = await authFetch(id ? `/api/bebes/${id}` : "/api/bebes", {
+          method: id ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+        toast(id ? "Registro actualizado ✓" : "Registro guardado ✓");
+        limpiar();
+        await cargar();
+      } catch (e) {
+        toast("Error: " + e.message, true);
+      }
+    },
+  });
 }
 
 function confirmar(id, nombre) {
-  deletingId = id;
-  document.getElementById("confirmMsg").innerHTML =
-    `¿Seguro que quieres eliminar a <strong>${nombre}</strong>?`;
-  document.getElementById("confirmModal").classList.add("open");
+  showMiniModal({
+    title: "Eliminar registro",
+    desc: `¿Eliminar a <strong>${nombre}</strong>? Esta acción no se puede deshacer.`,
+    confirmText: "Eliminar",
+    color: "red",
+    onConfirm: () => eliminar(id),
+  });
 }
 
-async function eliminar() {
+async function eliminar(id) {
   try {
-    const res = await authFetch(`/api/bebes/${deletingId}`, {
-      method: "DELETE",
-    });
+    const res = await authFetch(`/api/bebes/${id}`, { method: "DELETE" });
     const data = await res.json();
     if (!data.ok) throw new Error(data.error);
-    document.getElementById("confirmModal").classList.remove("open");
-    deletingId = null;
     toast("Registro eliminado");
     await cargar();
   } catch (e) {
@@ -280,6 +299,42 @@ function toast(msg, error = false) {
   t.textContent = msg;
   t.className = "toast-bebes show" + (error ? " error" : "");
   setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+// ── Mini modal minimalista ─────────────────────────────────────────────────────
+// color: "green" para guardar/editar, "red" para eliminar
+function showMiniModal({
+  title,
+  desc,
+  confirmText,
+  color = "green",
+  onConfirm,
+}) {
+  const modal = document.getElementById("miniModal");
+  const accent = document.getElementById("miniModalAccent");
+  const titleEl = document.getElementById("miniModalTitle");
+  const descEl = document.getElementById("miniModalDesc");
+  const btnOk = document.getElementById("miniModalConfirm");
+  const btnNo = document.getElementById("miniModalCancel");
+
+  const bg = color === "red" ? "#c62828" : "#2e7d32";
+  accent.style.background = bg;
+  btnOk.style.background = bg;
+  titleEl.textContent = title;
+  descEl.innerHTML = desc;
+  btnOk.textContent = confirmText;
+
+  modal.classList.add("open");
+
+  const close = () => modal.classList.remove("open");
+  btnNo.onclick = close;
+  modal.onclick = (e) => {
+    if (e.target === modal) close();
+  };
+  btnOk.onclick = () => {
+    close();
+    onConfirm();
+  };
 }
 
 document.getElementById("btnGuardar").addEventListener("click", guardar);
@@ -324,19 +379,6 @@ document
   .addEventListener("click", cerrarModalEditar);
 document.getElementById("editModal").addEventListener("click", (e) => {
   if (e.target === document.getElementById("editModal")) cerrarModalEditar();
-});
-
-// Modal eliminar
-document.getElementById("btnConfirmNo").addEventListener("click", () => {
-  document.getElementById("confirmModal").classList.remove("open");
-  deletingId = null;
-});
-document.getElementById("btnConfirmSi").addEventListener("click", eliminar);
-document.getElementById("confirmModal").addEventListener("click", (e) => {
-  if (e.target === document.getElementById("confirmModal")) {
-    document.getElementById("confirmModal").classList.remove("open");
-    deletingId = null;
-  }
 });
 
 // cargar() ya NO se llama aquí automáticamente.

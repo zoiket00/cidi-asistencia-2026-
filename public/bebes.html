@@ -1,146 +1,149 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Base de Datos — Fundación Juanfe</title>
-    <link rel="icon" type="image/png" href="img/Logo-Juanfe-verde-1-1.png" />
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/bebes.css" />
-  </head>
-  <body>
-    <header>
-      <div class="header-flex">
-        <img
-          src="img/Logo-Juanfe-verde-1-1.png"
-          alt="Logo Juanfe"
-          class="logo-img"
-        />
-        <h1>Base de Datos — Fundación Juanfe</h1>
-      </div>
-    </header>
 
-    <div class="body-layout">
-      <aside class="sidebar">
-        <nav class="sidebar-nav"></nav>
-      </aside>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Base de Datos — Fundación Juanfe</title>
+  <link rel="icon" type="image/png" href="img/Logo-Juanfe-verde-1-1.png" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/bebes.css" />
+  <style>
+    /* Mini modal minimalista — confirmaciones en Base de Datos */
+    .mini-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1200;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.18);
+      backdrop-filter: blur(2px);
+    }
 
-      <main class="container">
-        <!-- ── Formulario ── -->
-        <section class="form-section">
-          <div class="form-section-title" id="formTitle">Nuevo registro</div>
-          <input type="hidden" id="editingId" />
+    .mini-modal.open {
+      display: flex;
+    }
 
-          <div class="form-grid-top">
-            <div class="form-field">
-              <label>Nombre bebé</label>
-              <input type="text" id="fNombre" placeholder="Nombre completo" />
-            </div>
-            <div class="form-field">
-              <label>Nombre madre</label>
-              <input
-                type="text"
-                id="fMadre"
-                placeholder="Nombre completo de la madre"
-              />
-            </div>
-          </div>
+    .mini-modal-box {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
+      width: 92%;
+      max-width: 400px;
+      overflow: hidden;
+      animation: mmSlide 0.16s ease;
+    }
 
-          <div class="form-grid-bottom">
-            <div class="form-field">
-              <label>Fase</label>
-              <select id="fFase">
-                <option value="">Seleccionar</option>
-                <option value="UTE">UTE</option>
-                <option value="ULA 1">ULA 1</option>
-                <option value="ULA 2">ULA 2</option>
-                <option value="TSF">TSF</option>
-                <option value="Otra">Otra</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <label>Programa</label>
-              <select id="fPrograma">
-                <option value="">Seleccionar</option>
-                <option value="Hotelería">Hotelería</option>
-                <option value="Cocina">Cocina</option>
-                <option value="Belleza">Belleza</option>
-                <option value="Auxiliar Administrativo">
-                  Auxiliar Administrativo
-                </option>
-                <option value="Otro">Otro</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <label>Edad (meses)</label>
-              <select id="fEdad">
-                <option value="">Seleccionar</option>
-                <option value="6-15">6-15</option>
-                <option value="16-30">16-30</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <label>Días que asiste</label>
-              <div class="dias-pills" id="diasPills">
-                <span class="dia-pill" data-dia="Lunes">Lunes</span>
-                <span class="dia-pill" data-dia="Martes">Martes</span>
-                <span class="dia-pill" data-dia="Miercoles">Miercoles</span>
-                <span class="dia-pill" data-dia="Jueves">Jueves</span>
-                <span class="dia-pill" data-dia="Viernes">Viernes</span>
-              </div>
-            </div>
-          </div>
+    @keyframes mmSlide {
+      from {
+        transform: translateY(10px);
+        opacity: 0;
+      }
 
-          <div class="form-actions">
-            <button class="btn-guardar-form" id="btnGuardar">
-              Guardar registro
-            </button>
-            <button class="btn-limpiar-form" id="btnLimpiar">Limpiar</button>
-          </div>
-        </section>
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
 
-        <!-- ── Lista ── -->
-        <section class="lista-section">
-          <div class="lista-header">
-            <span class="lista-title" id="listaTitle">Registros actuales</span>
-            <input
-              type="text"
-              class="lista-search"
-              id="listaSearch"
-              placeholder="Buscar por nombre, fase o programa..."
-            />
-          </div>
-          <div id="listaBebes"></div>
-          <div class="pagination" id="pagination"></div>
-        </section>
-      </main>
+    .mini-modal-accent {
+      height: 3px;
+    }
+
+    .mini-modal-body {
+      padding: 22px 24px 16px;
+    }
+
+    .mini-modal-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #222;
+      margin-bottom: 6px;
+    }
+
+    .mini-modal-desc {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.55;
+    }
+
+    .mini-modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 12px 24px 18px;
+    }
+
+    .mini-btn-cancel {
+      background: white;
+      color: #888;
+      border: 1px solid #e0e0e0;
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.13s;
+    }
+
+    .mini-btn-cancel:hover {
+      background: #f5f5f5;
+    }
+
+    .mini-btn-confirm {
+      border: none;
+      padding: 8px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      color: white;
+      transition: opacity 0.13s;
+    }
+
+    .mini-btn-confirm:hover {
+      opacity: 0.88;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="header-flex">
+      <img src="img/Logo-Juanfe-verde-1-1.png" alt="Logo Juanfe" class="logo-img" />
+      <h1>Base de Datos — Fundación Juanfe</h1>
     </div>
+  </header>
 
-    <!-- Modal editar -->
-    <div class="edit-modal" id="editModal">
-      <div class="edit-box">
-        <div class="edit-modal-header">
-          <span class="edit-modal-title">Editar registro</span>
-          <button class="edit-modal-close" id="btnCerrarEdit">&times;</button>
-        </div>
-        <input type="hidden" id="editId" />
+  <div class="body-layout">
+    <aside class="sidebar">
+      <nav class="sidebar-nav"></nav>
+    </aside>
 
-        <div class="edit-field">
-          <label>Nombre bebé</label>
-          <input type="text" id="eNombre" placeholder="Nombre completo" />
+    <main class="container">
+      <!-- ── Formulario ── -->
+      <section class="form-section">
+        <div class="form-section-title" id="formTitle">Nuevo registro</div>
+        <input type="hidden" id="editingId" />
+
+        <div class="form-grid-top">
+          <div class="form-field">
+            <label>Nombre bebé</label>
+            <input type="text" id="fNombre" placeholder="Nombre completo" />
+          </div>
+          <div class="form-field">
+            <label>Nombre madre</label>
+            <input type="text" id="fMadre" placeholder="Nombre completo de la madre" />
+          </div>
         </div>
-        <div class="edit-field">
-          <label>Nombre madre</label>
-          <input
-            type="text"
-            id="eMadre"
-            placeholder="Nombre completo de la madre"
-          />
-        </div>
-        <div class="edit-row">
-          <div class="edit-field">
+
+        <div class="form-grid-bottom">
+          <div class="form-field">
             <label>Fase</label>
-            <select id="eFase">
+            <select id="fFase">
               <option value="">Seleccionar</option>
               <option value="UTE">UTE</option>
               <option value="ULA 1">ULA 1</option>
@@ -149,9 +152,9 @@
               <option value="Otra">Otra</option>
             </select>
           </div>
-          <div class="edit-field">
+          <div class="form-field">
             <label>Programa</label>
-            <select id="ePrograma">
+            <select id="fPrograma">
               <option value="">Seleccionar</option>
               <option value="Hotelería">Hotelería</option>
               <option value="Cocina">Cocina</option>
@@ -162,60 +165,147 @@
               <option value="Otro">Otro</option>
             </select>
           </div>
+          <div class="form-field">
+            <label>Edad (meses)</label>
+            <select id="fEdad">
+              <option value="">Seleccionar</option>
+              <option value="6-15">6-15</option>
+              <option value="16-30">16-30</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Días que asiste</label>
+            <div class="dias-pills" id="diasPills">
+              <span class="dia-pill" data-dia="Lunes">Lunes</span>
+              <span class="dia-pill" data-dia="Martes">Martes</span>
+              <span class="dia-pill" data-dia="Miercoles">Miercoles</span>
+              <span class="dia-pill" data-dia="Jueves">Jueves</span>
+              <span class="dia-pill" data-dia="Viernes">Viernes</span>
+            </div>
+          </div>
         </div>
-        <div class="edit-field" style="max-width: 200px">
-          <label>Edad (meses)</label>
-          <select id="eEdad">
+
+        <div class="form-actions">
+          <button class="btn-guardar-form" id="btnGuardar">
+            Guardar registro
+          </button>
+          <button class="btn-limpiar-form" id="btnLimpiar">Limpiar</button>
+        </div>
+      </section>
+
+      <!-- ── Lista ── -->
+      <section class="lista-section">
+        <div class="lista-header">
+          <span class="lista-title" id="listaTitle">Registros actuales</span>
+          <input type="text" class="lista-search" id="listaSearch"
+            placeholder="Buscar por nombre, fase o programa..." />
+        </div>
+        <div id="listaBebes"></div>
+        <div class="pagination" id="pagination"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal editar -->
+  <div class="edit-modal" id="editModal">
+    <div class="edit-box">
+      <div class="edit-modal-header">
+        <span class="edit-modal-title">Editar registro</span>
+        <button class="edit-modal-close" id="btnCerrarEdit">&times;</button>
+      </div>
+      <input type="hidden" id="editId" />
+
+      <div class="edit-field">
+        <label>Nombre bebé</label>
+        <input type="text" id="eNombre" placeholder="Nombre completo" />
+      </div>
+      <div class="edit-field">
+        <label>Nombre madre</label>
+        <input type="text" id="eMadre" placeholder="Nombre completo de la madre" />
+      </div>
+      <div class="edit-row">
+        <div class="edit-field">
+          <label>Fase</label>
+          <select id="eFase">
             <option value="">Seleccionar</option>
-            <option value="6-15">6-15</option>
-            <option value="16-30">16-30</option>
+            <option value="UTE">UTE</option>
+            <option value="ULA 1">ULA 1</option>
+            <option value="ULA 2">ULA 2</option>
+            <option value="TSF">TSF</option>
+            <option value="Otra">Otra</option>
           </select>
         </div>
         <div class="edit-field">
-          <label>Días que asiste</label>
-          <div class="dias-pills">
-            <span class="dia-pill" data-edit-dia="Lunes">Lunes</span>
-            <span class="dia-pill" data-edit-dia="Martes">Martes</span>
-            <span class="dia-pill" data-edit-dia="Miercoles">Miercoles</span>
-            <span class="dia-pill" data-edit-dia="Jueves">Jueves</span>
-            <span class="dia-pill" data-edit-dia="Viernes">Viernes</span>
-          </div>
-        </div>
-        <div class="edit-actions">
-          <button class="btn-guardar-form" id="btnGuardarEdit">
-            Guardar cambios
-          </button>
-          <button class="btn-limpiar-form" id="btnCancelarEdit">
-            Cancelar
-          </button>
+          <label>Programa</label>
+          <select id="ePrograma">
+            <option value="">Seleccionar</option>
+            <option value="Hotelería">Hotelería</option>
+            <option value="Cocina">Cocina</option>
+            <option value="Belleza">Belleza</option>
+            <option value="Auxiliar Administrativo">
+              Auxiliar Administrativo
+            </option>
+            <option value="Otro">Otro</option>
+          </select>
         </div>
       </div>
-    </div>
-
-    <!-- Modal eliminar -->
-    <div class="confirm-modal" id="confirmModal">
-      <div class="confirm-box">
-        <div class="confirm-icon">🗑️</div>
-        <p class="confirm-msg" id="confirmMsg"></p>
-        <div class="confirm-btns">
-          <button class="btn-confirm-no" id="btnConfirmNo">Cancelar</button>
-          <button class="btn-confirm-si" id="btnConfirmSi">Eliminar</button>
+      <div class="edit-field" style="max-width: 200px">
+        <label>Edad (meses)</label>
+        <select id="eEdad">
+          <option value="">Seleccionar</option>
+          <option value="6-15">6-15</option>
+          <option value="16-30">16-30</option>
+        </select>
+      </div>
+      <div class="edit-field">
+        <label>Días que asiste</label>
+        <div class="dias-pills">
+          <span class="dia-pill" data-edit-dia="Lunes">Lunes</span>
+          <span class="dia-pill" data-edit-dia="Martes">Martes</span>
+          <span class="dia-pill" data-edit-dia="Miercoles">Miercoles</span>
+          <span class="dia-pill" data-edit-dia="Jueves">Jueves</span>
+          <span class="dia-pill" data-edit-dia="Viernes">Viernes</span>
         </div>
       </div>
+      <div class="edit-actions">
+        <button class="btn-guardar-form" id="btnGuardarEdit">
+          Guardar cambios
+        </button>
+        <button class="btn-limpiar-form" id="btnCancelarEdit">
+          Cancelar
+        </button>
+      </div>
     </div>
+  </div>
 
-    <div class="toast-bebes" id="toastBebes"></div>
+  <div class="toast-bebes" id="toastBebes"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/bebes.js"></script>
-    <script>
-      document.addEventListener("DOMContentLoaded", async () => {
-        const usuario = await requireAuth("bebes");
-        if (!usuario) return;
-        renderSidebar("bebes", usuario.rol);
-        await cargar();
-      });
-    </script>
-  </body>
+  <!-- Modal minimalista reutilizable para confirmar acciones -->
+  <div class="mini-modal" id="miniModal">
+    <div class="mini-modal-box">
+      <div class="mini-modal-accent" id="miniModalAccent"></div>
+      <div class="mini-modal-body">
+        <div class="mini-modal-title" id="miniModalTitle"></div>
+        <div class="mini-modal-desc" id="miniModalDesc"></div>
+      </div>
+      <div class="mini-modal-footer">
+        <button class="mini-btn-cancel" id="miniModalCancel">Cancelar</button>
+        <button class="mini-btn-confirm" id="miniModalConfirm"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/bebes.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const usuario = await requireAuth("bebes");
+      if (!usuario) return;
+      renderSidebar("bebes", usuario.rol);
+      await cargar();
+    });
+  </script>
+</body>
+
 </html>

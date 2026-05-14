@@ -107,46 +107,21 @@
 
       <!-- ── Sección Exportar (solo admin y coordinadora) ── -->
       <section class="exp-section" id="expSection" style="display:none">
-        <div class="exp-title">Descargar historial de asistencia</div>
+        <div class="exp-title">Descargar listado de asistencia</div>
         <div class="exp-sub">
-          Selecciona el rango de fechas y los filtros opcionales. Puedes
-          previsualizar los datos antes de descargar.
+          Selecciona la fecha y el día del listado que quieres descargar.
+          Puedes previsualizar los datos antes de exportar.
         </div>
 
-        <!-- Filtros -->
         <div class="exp-filtros">
           <div class="exp-field">
-            <label>Fecha inicio</label>
-            <input type="date" id="expDesde" />
-          </div>
-          <div class="exp-field">
-            <label>Fecha fin</label>
-            <input type="date" id="expHasta" />
-          </div>
-          <div class="exp-field">
-            <label>Programa</label>
-            <select id="expPrograma">
-              <option value="">Todos</option>
-              <option value="Hotelería">Hotelería</option>
-              <option value="Cocina">Cocina</option>
-              <option value="Belleza">Belleza</option>
-              <option value="Auxiliar Administrativo">Auxiliar Administrativo</option>
-            </select>
-          </div>
-          <div class="exp-field">
-            <label>Fase</label>
-            <select id="expFase">
-              <option value="">Todas</option>
-              <option value="UTE">UTE</option>
-              <option value="ULA 1">ULA 1</option>
-              <option value="ULA 2">ULA 2</option>
-              <option value="TSF">TSF</option>
-            </select>
+            <label>Fecha</label>
+            <input type="date" id="expFecha" />
           </div>
           <div class="exp-field">
             <label>Día</label>
             <select id="expDia">
-              <option value="">Todos</option>
+              <option value="">Seleccionar</option>
               <option value="Lunes">Lunes</option>
               <option value="Martes">Martes</option>
               <option value="Miercoles">Miércoles</option>
@@ -156,7 +131,6 @@
           </div>
         </div>
 
-        <!-- Acciones -->
         <div class="exp-acciones">
           <button class="btn-exp-preview" id="btnExpPreview">
             👁 Vista previa
@@ -166,7 +140,6 @@
           </button>
         </div>
 
-        <!-- Vista previa -->
         <div class="exp-preview-wrap" id="expPreviewWrap" style="display:none">
           <div class="exp-preview-header">
             <span class="exp-preview-total" id="expPreviewTotal"></span>

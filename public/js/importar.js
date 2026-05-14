@@ -574,16 +574,9 @@ function initExportar(rol) {
   document.getElementById("delDivisor").style.display = "flex";
   document.getElementById("delSection").style.display = "block";
 
-  // Fecha por defecto: mes actual
-  const hoy = new Date();
-  const primerDia = new Date(hoy.getFullYear(), hoy.getMonth(), 1)
-    .toISOString()
-    .slice(0, 10);
-  const ultimoDia = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0)
-    .toISOString()
-    .slice(0, 10);
-  document.getElementById("expDesde").value = primerDia;
-  document.getElementById("expHasta").value = ultimoDia;
+  // Fecha por defecto: hoy
+  const hoy = new Date().toISOString().slice(0, 10);
+  document.getElementById("expFecha").value = hoy;
 
   document
     .getElementById("btnExpPreview")
@@ -604,27 +597,17 @@ function initExportar(rol) {
   });
 }
 
-/** Construye la URL de exportar con los filtros actuales */
+/** Construye la URL de exportar con fecha y día */
 function buildExpUrl(extra = "") {
-  const desde = document.getElementById("expDesde").value;
-  const hasta = document.getElementById("expHasta").value;
-  const programa = document.getElementById("expPrograma").value;
-  const fase = document.getElementById("expFase").value;
+  const fecha = document.getElementById("expFecha").value;
   const dia = document.getElementById("expDia").value;
 
-  if (!desde || !hasta) {
-    toast("Selecciona fecha inicio y fecha fin", true);
-    return null;
-  }
-  if (desde > hasta) {
-    toast("La fecha inicio no puede ser mayor a la fecha fin", true);
+  if (!fecha || !dia) {
+    toast("Selecciona fecha y día antes de continuar", true);
     return null;
   }
 
-  const params = new URLSearchParams({ desde, hasta });
-  if (programa) params.append("programa", programa);
-  if (fase) params.append("fase", fase);
-  if (dia) params.append("dia", dia);
+  const params = new URLSearchParams({ desde: fecha, hasta: fecha, dia });
   if (extra) params.append(extra, "true");
 
   return `/api/exportar?${params.toString()}`;
