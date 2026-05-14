@@ -808,9 +808,9 @@ tr.nocidi-row td:first-child {
   color: #2e7d32;
 }
 .btn-si.active {
-  background: #2e7d32;
-  color: #ffffff;
-  border-color: #1b5e20;
+  background: #38fc00;
+  color: #1a5c00;
+  border-color: #2db800;
 }
 .btn-si:hover:not(.active) {
   background: #e8f5e9;
