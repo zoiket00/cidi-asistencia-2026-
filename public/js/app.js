@@ -119,7 +119,43 @@ function _lockTable(on) {
 }
 
 function setupEventListeners() {
-  exportBtn.addEventListener("click", exportToExcel);
+  exportBtn.addEventListener("click", () => {
+    // Mostrar modal de confirmación antes de exportar
+    const activeTab = document.querySelector(".tab.active");
+    if (!activeTab) {
+      alert("Por favor, selecciona un día primero.");
+      return;
+    }
+    const dayToExport = activeTab.dataset.day;
+    const dataToExport = modifiedData[dayToExport] || [];
+    if (dataToExport.length === 0) {
+      alert(`No hay datos para exportar en el día ${dayToExport}`);
+      return;
+    }
+
+    const total = dataToExport.length;
+    const presentes = dataToExport.filter(
+      (r) => r.Asistencia === "Sí" || r.Asistencia === "Si",
+    ).length;
+    const ausentes = total - presentes;
+
+    document.getElementById("exportConfirmMsg").innerHTML =
+      `Vas a exportar el listado del <strong>${dayToExport}</strong> con:<br>
+       <strong>${total}</strong> bebés registrados &nbsp;·&nbsp;
+       <strong style="color:#2e7d32">${presentes}</strong> presentes &nbsp;·&nbsp;
+       <strong style="color:#c62828">${ausentes}</strong> ausentes`;
+
+    const modal = document.getElementById("exportConfirmModal");
+    modal.style.display = "flex";
+
+    document.getElementById("exportConfirmSi").onclick = () => {
+      modal.style.display = "none";
+      exportToExcel();
+    };
+    document.getElementById("exportConfirmNo").onclick = () => {
+      modal.style.display = "none";
+    };
+  });
   searchInput.addEventListener("input", filterData);
 }
 

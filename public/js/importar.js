@@ -566,9 +566,13 @@ function toast(msg, error = false) {
 function initExportar(rol) {
   if (!["admin", "coordinadora"].includes(rol)) return;
 
-  // Mostrar divisor y sección
+  // Mostrar divisor y sección exportar
   document.getElementById("expDivisor").style.display = "flex";
   document.getElementById("expSection").style.display = "block";
+
+  // Mostrar divisor y sección eliminar
+  document.getElementById("delDivisor").style.display = "flex";
+  document.getElementById("delSection").style.display = "block";
 
   // Fecha por defecto: mes actual
   const hoy = new Date();
@@ -587,6 +591,17 @@ function initExportar(rol) {
   document
     .getElementById("btnExpDescargar")
     .addEventListener("click", descargarExcel);
+  document
+    .getElementById("btnDelDia")
+    .addEventListener("click", confirmarEliminarDia);
+
+  // Modal eliminar
+  document.getElementById("delConfirmClose").addEventListener("click", () => {
+    document.getElementById("delConfirmModal").classList.remove("open");
+  });
+  document.getElementById("delConfirmNo").addEventListener("click", () => {
+    document.getElementById("delConfirmModal").classList.remove("open");
+  });
 }
 
 /** Construye la URL de exportar con los filtros actuales */
@@ -711,6 +726,62 @@ async function descargarExcel() {
     toast("Error: " + e.message, true);
   } finally {
     btn.textContent = "↓ Descargar Excel";
+    btn.disabled = false;
+  }
+}
+
+/** Muestra modal de confirmación antes de eliminar el día */
+function confirmarEliminarDia() {
+  const fecha = document.getElementById("delFecha").value;
+  const dia = document.getElementById("delDia").value;
+
+  if (!fecha || !dia) {
+    toast("Selecciona fecha y día antes de eliminar", true);
+    return;
+  }
+
+  // Formatear fecha legible
+  const [y, m, d] = fecha.split("-");
+  const fechaLegible = `${d}/${m}/${y}`;
+
+  document.getElementById("delConfirmMsg").innerHTML =
+    `¿Estás segura de eliminar <strong>todos los registros</strong> del <strong>${dia} ${fechaLegible}</strong>?<br><br>
+     <span style="color:#c62828;font-size:12px">Esta acción no se puede deshacer. La profesora deberá volver a exportar ese día.</span>`;
+
+  const modal = document.getElementById("delConfirmModal");
+  modal.classList.add("open");
+
+  document.getElementById("delConfirmSi").onclick = async () => {
+    modal.classList.remove("open");
+    await eliminarDia(fecha, dia);
+  };
+}
+
+/** Elimina todos los registros de un día vía API */
+async function eliminarDia(fecha, dia) {
+  const btn = document.getElementById("btnDelDia");
+  btn.textContent = "Eliminando...";
+  btn.disabled = true;
+
+  try {
+    const res = await authFetch("/api/asistencia/dia", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fecha, dia }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error eliminando");
+
+    toast(`✓ ${data.eliminados} registros de ${dia} ${fecha} eliminados`);
+
+    // Limpiar campos
+    document.getElementById("delFecha").value = "";
+    document.getElementById("delDia").value = "";
+  } catch (e) {
+    toast("Error: " + e.message, true);
+  } finally {
+    btn.textContent = "🗑 Eliminar listado";
     btn.disabled = false;
   }
 }

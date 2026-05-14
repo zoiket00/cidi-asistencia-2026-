@@ -789,12 +789,12 @@ tr.nocidi-row td:first-child {
 }
 
 .btn-asis {
-  padding: 4px 10px;
+  padding: 7px 16px;
   border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
-  border: 1.5px solid;
+  border: 2px solid;
   background: transparent;
   transition:
     background 0.15s,
@@ -804,29 +804,29 @@ tr.nocidi-row td:first-child {
 }
 
 .btn-si {
-  border-color: #4caf50;
-  color: #4caf50;
+  border-color: #2e7d32;
+  color: #2e7d32;
 }
 .btn-si.active {
-  background: #e8f5e9;
-  color: #2e7d32;
-  border-color: #2e7d32;
+  background: #2e7d32;
+  color: #ffffff;
+  border-color: #1b5e20;
 }
 .btn-si:hover:not(.active) {
-  background: #f1faf1;
+  background: #e8f5e9;
 }
 
 .btn-no {
-  border-color: #ef5350;
-  color: #ef5350;
+  border-color: #c62828;
+  color: #c62828;
 }
 .btn-no.active {
-  background: #ffebee;
-  color: #c62828;
-  border-color: #c62828;
+  background: #c62828;
+  color: #ffffff;
+  border-color: #b71c1c;
 }
 .btn-no:hover:not(.active) {
-  background: #fff5f5;
+  background: #ffebee;
 }
 
 /* ─── Botón toggle Edad — pill con ícono ─── */

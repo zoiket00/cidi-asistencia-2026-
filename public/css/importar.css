@@ -686,3 +686,28 @@
 .btn-info-ok:hover {
   background: #6ab514;
 }
+
+/* ─── Botón eliminar día ─── */
+.btn-del-dia {
+  background: white;
+  color: #c62828;
+  border: 1.5px solid #c62828;
+  padding: 9px 22px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.btn-del-dia:hover:not(:disabled) {
+  background: #ffebee;
+}
+
+.btn-del-dia:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

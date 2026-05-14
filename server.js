@@ -647,6 +647,60 @@ app.get("/api/asistencia", async (req, res) => {
 });
 
 /**
+ * DELETE /api/asistencia/dia
+ * Elimina todos los registros de un día específico.
+ * Solo accesible para admin y coordinadora.
+ * Body: { fecha: "YYYY-MM-DD", dia: "Lunes" }
+ */
+app.delete("/api/asistencia/dia", async (req, res) => {
+  try {
+    const { fecha, dia } = req.body;
+
+    if (!fecha || !dia) {
+      return res.status(400).json({ error: "Se requieren fecha y dia" });
+    }
+
+    // Verificar que el usuario es admin o coordinadora
+    const { data: usuario } = await supabase
+      .from("usuarios")
+      .select("rol")
+      .eq("id", req.user.id)
+      .single();
+
+    if (!usuario || !["admin", "coordinadora"].includes(usuario.rol)) {
+      return res
+        .status(403)
+        .json({ error: "Solo admin y coordinadora pueden eliminar registros" });
+    }
+
+    const { data, error } = await supabase
+      .from("registros_asistencia")
+      .delete()
+      .eq("fecha", fecha)
+      .eq("dia", dia)
+      .select("id");
+
+    if (error) throw error;
+
+    const eliminados = data?.length ?? 0;
+
+    if (eliminados === 0) {
+      return res
+        .status(404)
+        .json({ error: `No se encontraron registros para ${dia} ${fecha}` });
+    }
+
+    console.log(
+      `🗑️  Eliminados ${eliminados} registros de ${dia} ${fecha} por ${usuario.rol}`,
+    );
+    res.json({ ok: true, eliminados });
+  } catch (err) {
+    console.error("Error DELETE /api/asistencia/dia:", err.message);
+    res.status(500).json({ error: "Error eliminando registros" });
+  }
+});
+
+/**
  * GET /api/exportar
  * Genera o previsualiza un Excel de registros_asistencia filtrado por rango de fechas.
  * Solo accesible para admin y coordinadora (verificado por rol en tabla usuarios).

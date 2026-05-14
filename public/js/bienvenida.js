@@ -5,13 +5,13 @@ const OPCIONES_ROL = {
     { href: "/", label: "Listado de asistencias", primary: true },
     { href: "/bebes", label: "Base de datos" },
     { href: "/dashboard", label: "Dashboard" },
-    { href: "/importar", label: "Importar archivos" },
+    { href: "/importar", label: "Importar / Exportar" },
   ],
   coordinadora: [
     { href: "/", label: "Listado de asistencias", primary: true },
     { href: "/bebes", label: "Base de datos" },
     { href: "/dashboard", label: "Dashboard" },
-    { href: "/importar", label: "Importar archivos" },
+    { href: "/importar", label: "Importar / Exportar" },
   ],
   profesora: [
     { href: "/", label: "Listado de asistencias", primary: true },
