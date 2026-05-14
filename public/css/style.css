@@ -1,7 +1,7 @@
 :root {
   --primary-color: #85da1a; /* verde principal — header, tabs, botones */
   --dark-color: #6ab514; /* hover botón primario */
-  --present-bg: #f0fbe6; /* fondo fila presente */
+  --present-bg: #d4fdb8; /* fondo fila presente */
   --present-text: #2e7d32; /* texto fila presente */
   --absent-bg: #fdf0f0; /* fondo fila ausente — más suave */
   --absent-text: #7b1c1c; /* texto fila ausente */
