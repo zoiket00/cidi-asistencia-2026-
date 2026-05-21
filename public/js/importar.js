@@ -597,16 +597,32 @@ function initExportar(rol) {
   });
 }
 
+/** Deriva el nombre del día a partir de una fecha YYYY-MM-DD */
+function getDayFromDate(fecha) {
+  const dias = [
+    "Domingo",
+    "Lunes",
+    "Martes",
+    "Miercoles",
+    "Jueves",
+    "Viernes",
+    "Sabado",
+  ];
+  // Agregar T12:00:00 para evitar problemas de zona horaria
+  const d = new Date(fecha + "T12:00:00");
+  return dias[d.getDay()];
+}
+
 /** Construye la URL de exportar con fecha y día */
 function buildExpUrl(extra = "") {
   const fecha = document.getElementById("expFecha").value;
-  const dia = document.getElementById("expDia").value;
 
-  if (!fecha || !dia) {
-    toast("Selecciona fecha y día antes de continuar", true);
+  if (!fecha) {
+    toast("Selecciona una fecha antes de continuar", true);
     return null;
   }
 
+  const dia = getDayFromDate(fecha);
   const params = new URLSearchParams({ desde: fecha, hasta: fecha, dia });
   if (extra) params.append(extra, "true");
 
@@ -716,14 +732,13 @@ async function descargarExcel() {
 /** Muestra modal de confirmación antes de eliminar el día */
 function confirmarEliminarDia() {
   const fecha = document.getElementById("delFecha").value;
-  const dia = document.getElementById("delDia").value;
 
-  if (!fecha || !dia) {
-    toast("Selecciona fecha y día antes de eliminar", true);
+  if (!fecha) {
+    toast("Selecciona una fecha antes de eliminar", true);
     return;
   }
 
-  // Formatear fecha legible
+  const dia = getDayFromDate(fecha);
   const [y, m, d] = fecha.split("-");
   const fechaLegible = `${d}/${m}/${y}`;
 

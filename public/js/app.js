@@ -558,6 +558,34 @@ function renderRow(tr, row, day, index, rowNum) {
   btnEditar.textContent = "Editar";
 
   btnPair.append(btnSi, btnNo, btnVer, btnEditar);
+
+  // ── Select tipo: Normal / No CIDI / Extras ────────────────────────────────
+  // Permite cambiar el tipo de un bebé ya añadido sin tener que eliminarlo
+  const selTipo = document.createElement("select");
+  selTipo.className = "sel-tipo-bebe";
+  selTipo.title = "Cambiar tipo de registro";
+  const tipoActual =
+    row.NoCidi === "Sí" ? "nocidi" : row.Extras === "Sí" ? "extras" : "normal";
+  [
+    { value: "normal", label: "Normal" },
+    { value: "nocidi", label: "No CIDI" },
+    { value: "extras", label: "Extras" },
+  ].forEach(({ value, label }) => {
+    const opt = document.createElement("option");
+    opt.value = value;
+    opt.textContent = label;
+    if (value === tipoActual) opt.selected = true;
+    selTipo.appendChild(opt);
+  });
+  selTipo.onchange = () => {
+    const val = selTipo.value;
+    updateField(day, index, "NoCidi", val === "nocidi" ? "Sí" : "");
+    updateField(day, index, "Extras", val === "extras" ? "Sí" : "");
+    tr.className = getRowClass();
+    updateCounter();
+    saveToLocalStorage();
+  };
+  btnPair.appendChild(selTipo);
   tdAsis.appendChild(btnPair);
   tr.appendChild(tdAsis);
 
@@ -593,7 +621,18 @@ function renderRow(tr, row, day, index, rowNum) {
     updateField(day, index, "Reporte", val);
     grpSitu.style.display = val === "Sí" ? "" : "none";
     grpNota.style.display = val === "Sí" ? "" : "none";
-    updateCounter(); // sincronizar badges de edad en reportados
+    if (val === "No") {
+      // Auto-limpiar reporte — limpiar campos y ocultar botones sin necesidad de guardar
+      updateField(day, index, "SituacionEspecifica", "");
+      updateField(day, index, "Nota", "");
+      updateField(day, index, "Ubicacion", "");
+      btnVer.classList.add("acc-hidden");
+      btnEditar.classList.add("acc-hidden");
+      summaryDiv.classList.add("acc-hidden");
+      accordionTr.classList.add("acc-hidden");
+      saveToLocalStorage();
+    }
+    updateCounter();
   });
   grpRep.appendChild(selRep);
 
@@ -1129,20 +1168,45 @@ function addAddBabyButton() {
       return;
     }
 
-    if (!modifiedData[currentDay]) modifiedData[currentDay] = [];
-    if (newBaby.Extras === "Sí" || newBaby.NoCidi === "Sí") {
-      modifiedData[currentDay].unshift(newBaby);
-    } else {
-      modifiedData[currentDay].push(newBaby);
-    }
+    // Mostrar modal de confirmación con resumen antes de agregar
+    const tipo =
+      newBaby.NoCidi === "Sí"
+        ? "No CIDI"
+        : newBaby.Extras === "Sí"
+          ? "Extras"
+          : "Normal";
+    const resumen = [
+      newBaby.Fase ? `Fase: ${newBaby.Fase}` : null,
+      newBaby.ProgramaMadre ? `Programa: ${newBaby.ProgramaMadre}` : null,
+      newBaby.Edad ? `Edad: ${newBaby.Edad} meses` : null,
+      `Tipo: ${tipo}`,
+    ]
+      .filter(Boolean)
+      .join("  ·  ");
 
-    saveToLocalStorage();
-    renderTable(currentDay, modifiedData[currentDay]);
-    updateCounter();
-    resetModal();
     modal.style.display = "none";
-    exportBtn.disabled = false;
-    if (searchInput.value) filterData();
+    showAddBabyConfirm({
+      nombre: newBaby.NombreBebe,
+      madre: newBaby.NombreMadre,
+      resumen,
+      onConfirm: () => {
+        if (!modifiedData[currentDay]) modifiedData[currentDay] = [];
+        if (newBaby.Extras === "Sí" || newBaby.NoCidi === "Sí") {
+          modifiedData[currentDay].unshift(newBaby);
+        } else {
+          modifiedData[currentDay].push(newBaby);
+        }
+        saveToLocalStorage();
+        renderTable(currentDay, modifiedData[currentDay]);
+        updateCounter();
+        resetModal();
+        exportBtn.disabled = false;
+        if (searchInput.value) filterData();
+      },
+      onCancel: () => {
+        modal.style.display = "block"; // volver al modal de añadir
+      },
+    });
   });
 }
 
@@ -1164,4 +1228,29 @@ function showSmartAlert(message) {
 
   closeBtn.addEventListener("click", cerrar);
   window.addEventListener("click", outsideClick);
+}
+
+// ── Modal resumen confirmar añadir bebé ───────────────────────────────────────
+function showAddBabyConfirm({ nombre, madre, resumen, onConfirm, onCancel }) {
+  const modal = document.getElementById("addBabyConfirmModal");
+  document.getElementById("abcNombre").textContent = nombre;
+  document.getElementById("abcMadre").textContent = madre;
+  document.getElementById("abcResumen").textContent = resumen;
+  modal.style.display = "flex";
+
+  const btnSi = document.getElementById("abcBtnSi");
+  const btnNo = document.getElementById("abcBtnNo");
+
+  const close = (cb) => {
+    modal.style.display = "none";
+    btnSi.onclick = null;
+    btnNo.onclick = null;
+    if (cb) cb();
+  };
+
+  btnSi.onclick = () => close(onConfirm);
+  btnNo.onclick = () => close(onCancel);
+  modal.onclick = (e) => {
+    if (e.target === modal) close(onCancel);
+  };
 }
