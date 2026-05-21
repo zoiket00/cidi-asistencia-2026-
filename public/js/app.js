@@ -653,6 +653,19 @@ function renderRow(tr, row, day, index, rowNum) {
   btnGuardar.type = "button";
   btnGuardar.className = "btn-guardar-reporte";
   btnGuardar.textContent = "Guardar reporte";
+
+  const btnEliminarReporte = document.createElement("button");
+  btnEliminarReporte.type = "button";
+  btnEliminarReporte.className = "btn-eliminar-reporte";
+  btnEliminarReporte.textContent = "✕ Eliminar reporte";
+  btnEliminarReporte.style.cssText =
+    "margin-left:8px;padding:7px 14px;border-radius:6px;border:1.5px solid #e57373;" +
+    "background:white;color:#c62828;font-size:12px;font-weight:700;cursor:pointer;" +
+    "font-family:inherit;transition:background .13s;";
+  btnEliminarReporte.onmouseover = () =>
+    (btnEliminarReporte.style.background = "#ffebee");
+  btnEliminarReporte.onmouseout = () =>
+    (btnEliminarReporte.style.background = "white");
   btnGuardar.onclick = () => {
     saveToLocalStorage();
     const r = modifiedData[day][index];
@@ -686,7 +699,14 @@ function renderRow(tr, row, day, index, rowNum) {
     }
     updateCounter();
   };
-  formDiv.append(grpUbic, grpRep, grpSitu, grpNota, btnGuardar);
+  formDiv.append(
+    grpUbic,
+    grpRep,
+    grpSitu,
+    grpNota,
+    btnGuardar,
+    btnEliminarReporte,
+  );
 
   const summaryDiv = document.createElement("div");
   summaryDiv.className = "reporte-summary" + (yaReportado ? "" : " acc-hidden");
@@ -767,6 +787,24 @@ function renderRow(tr, row, day, index, rowNum) {
     accordionTr.classList.remove("acc-hidden");
     formDiv.classList.remove("acc-hidden");
     summaryDiv.classList.add("acc-hidden");
+  };
+
+  // Eliminar reporte — limpia todo y cierra el acordeón directamente
+  // Se define aquí porque todos los elementos DOM ya están declarados en este punto
+  btnEliminarReporte.onclick = () => {
+    updateField(day, index, "Reporte", "No");
+    updateField(day, index, "SituacionEspecifica", "");
+    updateField(day, index, "Nota", "");
+    updateField(day, index, "Ubicacion", "");
+    selRep.value = "No";
+    grpSitu.style.display = "none";
+    grpNota.style.display = "none";
+    btnVer.classList.add("acc-hidden");
+    btnEditar.classList.add("acc-hidden");
+    summaryDiv.classList.add("acc-hidden");
+    formDiv.classList.add("acc-hidden");
+    accordionTr.classList.add("acc-hidden");
+    updateCounter();
   };
 
   tr._accordionTr = accordionTr;

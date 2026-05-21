@@ -1074,9 +1074,10 @@ tbody td:nth-child(6) {
   text-align: center;
 }
 
-/* Asistencia — ancho fijo */
+/* Asistencia — ancho mínimo, se expande para llenar el espacio restante */
 tbody td:nth-child(7) {
-  width: 170px;
+  min-width: 200px;
+  width: auto;
 }
 
 /* ─── Usuario + logout al fondo del sidebar ─── */
