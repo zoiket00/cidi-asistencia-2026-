@@ -621,17 +621,6 @@ function renderRow(tr, row, day, index, rowNum) {
     updateField(day, index, "Reporte", val);
     grpSitu.style.display = val === "Sí" ? "" : "none";
     grpNota.style.display = val === "Sí" ? "" : "none";
-    if (val === "No") {
-      // Auto-limpiar reporte — limpiar campos y ocultar botones sin necesidad de guardar
-      updateField(day, index, "SituacionEspecifica", "");
-      updateField(day, index, "Nota", "");
-      updateField(day, index, "Ubicacion", "");
-      btnVer.classList.add("acc-hidden");
-      btnEditar.classList.add("acc-hidden");
-      summaryDiv.classList.add("acc-hidden");
-      accordionTr.classList.add("acc-hidden");
-      saveToLocalStorage();
-    }
     updateCounter();
   });
   grpRep.appendChild(selRep);
@@ -667,20 +656,34 @@ function renderRow(tr, row, day, index, rowNum) {
   btnGuardar.onclick = () => {
     saveToLocalStorage();
     const r = modifiedData[day][index];
-    formDiv.classList.add("acc-hidden");
-    summaryDiv.classList.remove("acc-hidden");
-    btnVer.classList.remove("acc-hidden");
-    btnEditar.classList.remove("acc-hidden");
-    // Actualizar texto del summary con ubicación + situación + nota
-    const ubicTxt = r.Ubicacion ? `📍 ${r.Ubicacion}` : "";
-    const situTxt = r.SituacionEspecifica
-      ? `⚠️ ${r.SituacionEspecifica}`
-      : "Sin situación";
-    const notaTxt = r.Nota ? `💬 ${r.Nota}` : "";
-    summaryText.innerHTML = [ubicTxt, situTxt, notaTxt]
-      .filter(Boolean)
-      .join(" &nbsp;·&nbsp; ");
-    accordionTr.classList.add("acc-hidden");
+
+    if (r.Reporte === "No") {
+      // Profesora cambió a "No" — limpiar reporte completamente
+      // Aquí todos los elementos DOM ya están declarados, no hay problema de scope
+      updateField(day, index, "SituacionEspecifica", "");
+      updateField(day, index, "Nota", "");
+      updateField(day, index, "Ubicacion", "");
+      btnVer.classList.add("acc-hidden");
+      btnEditar.classList.add("acc-hidden");
+      summaryDiv.classList.add("acc-hidden");
+      formDiv.classList.add("acc-hidden");
+      accordionTr.classList.add("acc-hidden");
+    } else {
+      // Reporte activo — mostrar resumen
+      formDiv.classList.add("acc-hidden");
+      summaryDiv.classList.remove("acc-hidden");
+      btnVer.classList.remove("acc-hidden");
+      btnEditar.classList.remove("acc-hidden");
+      const ubicTxt = r.Ubicacion ? `📍 ${r.Ubicacion}` : "";
+      const situTxt = r.SituacionEspecifica
+        ? `⚠️ ${r.SituacionEspecifica}`
+        : "Sin situación";
+      const notaTxt = r.Nota ? `💬 ${r.Nota}` : "";
+      summaryText.innerHTML = [ubicTxt, situTxt, notaTxt]
+        .filter(Boolean)
+        .join(" &nbsp;·&nbsp; ");
+      accordionTr.classList.add("acc-hidden");
+    }
     updateCounter();
   };
   formDiv.append(grpUbic, grpRep, grpSitu, grpNota, btnGuardar);
