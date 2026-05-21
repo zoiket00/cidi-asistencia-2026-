@@ -699,14 +699,13 @@ function renderRow(tr, row, day, index, rowNum) {
     }
     updateCounter();
   };
-  formDiv.append(
-    grpUbic,
-    grpRep,
-    grpSitu,
-    grpNota,
-    btnGuardar,
-    btnEliminarReporte,
-  );
+  // Agrupar botones en un div para que queden en la misma línea
+  const btnGroup = document.createElement("div");
+  btnGroup.style.cssText =
+    "display:flex;gap:8px;align-self:flex-end;flex-wrap:nowrap;";
+  btnGroup.append(btnGuardar, btnEliminarReporte);
+
+  formDiv.append(grpUbic, grpRep, grpSitu, grpNota, btnGroup);
 
   const summaryDiv = document.createElement("div");
   summaryDiv.className = "reporte-summary" + (yaReportado ? "" : " acc-hidden");
