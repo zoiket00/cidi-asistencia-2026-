@@ -295,6 +295,7 @@ app.post("/api/bebes", async (req, res) => {
       .from("bebes")
       .select("id")
       .ilike("nombre_bebe", nombre_bebe.trim())
+      .ilike("nombre_madre", nombre_madre.trim())
       .maybeSingle();
 
     let bebeId;
@@ -615,9 +616,9 @@ app.get("/api/asistencia", async (req, res) => {
     const { data, error } = await query;
     if (error) throw error;
 
-    if (data.length === 10000)
+    if (data.length >= 50000)
       console.warn(
-        "⚠️  GET /api/asistencia: límite de 10000 alcanzado — puede haber registros sin devolver",
+        "⚠️  GET /api/asistencia: límite de 50000 alcanzado — puede haber registros sin devolver",
       );
 
     const registros = data.map((r) => ({

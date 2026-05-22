@@ -141,6 +141,20 @@ const UnifiedModel = (() => {
       if (!out.ProgramaMadre) out.ProgramaMadre = s.replace(inst, "").trim();
     }
 
+    // Normalizar Dia: la BD almacena sin tildes (server.js las quita antes de guardar).
+    // Las gráficas, la tabla resumen y el sort usan la forma canónica con tilde.
+    // Sin esto, todos los registros del miércoles desaparecen de los charts.
+    if (out.Dia) {
+      const dNorm = _norm(out.Dia);
+      if (dNorm === "miercoles") out.Dia = "Miércoles";
+      else if (dNorm === "sabado") out.Dia = "Sábado";
+      else if (dNorm === "lunes") out.Dia = "Lunes";
+      else if (dNorm === "martes") out.Dia = "Martes";
+      else if (dNorm === "jueves") out.Dia = "Jueves";
+      else if (dNorm === "viernes") out.Dia = "Viernes";
+      else if (dNorm === "domingo") out.Dia = "Domingo";
+    }
+
     // Normalizar Edad: acepta "6-15", "16-30", "6 a 15 meses", "16 a 30 meses", número suelto
     if (out.Edad) {
       const rawE = String(out.Edad)
@@ -526,6 +540,8 @@ function initDashboard() {
     .getElementById("btnClearSession")
     ?.addEventListener("click", clearSession);
 
+  setupKeyboardShortcuts();
+
   // Orden de restauración:
   // 1. Si hay un rango de fechas guardado → carga desde Supabase (prioridad)
   // 2. Si no hay rango pero hay Excels en IndexedDB → restaura los archivos manuales
@@ -535,6 +551,47 @@ function initDashboard() {
   } else {
     restoreSession();
   }
+}
+
+/**
+ * Atajos de teclado globales del dashboard.
+ * 1-6 → cambiar filtro activo
+ * K   → enfocar búsqueda de bebé
+ * Esc → limpiar bebé seleccionado
+ */
+function setupKeyboardShortcuts() {
+  const FILTER_KEYS = {
+    "1": "todos",
+    "2": "presentes",
+    "3": "ausentes",
+    "4": "reportados",
+    "5": "extras",
+    "6": "nocidi",
+  };
+  document.addEventListener("keydown", (e) => {
+    // No activar atajos si el foco está en un campo de entrada
+    const tag = e.target.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (!allData.length) return; // sin datos, no hay filtros que cambiar
+
+    if (FILTER_KEYS[e.key]) {
+      e.preventDefault();
+      document
+        .querySelector(`[data-filter="${FILTER_KEYS[e.key]}"]`)
+        ?.click();
+    } else if (e.key === "k" || e.key === "K") {
+      e.preventDefault();
+      const input = document.getElementById("babySearch");
+      input?.focus();
+      input?.select();
+    } else if (e.key === "Escape") {
+      const tag = document.getElementById("selectedBabyTag");
+      if (tag && tag.style.display !== "none") {
+        document.getElementById("btnClearBaby")?.click();
+      }
+    }
+  });
 }
 
 /** Configura los botones y fechas del panel de carga desde Supabase */
@@ -547,8 +604,11 @@ function setupSupabaseLoader() {
 
   if (!btnCargar) return;
 
-  // Poner fecha de hoy por defecto en los inputs
-  const hoy = new Date().toISOString().split("T")[0];
+  // Fecha de hoy en zona horaria Colombia (GMT-5) — toISOString() devuelve UTC
+  // y podría mostrar el día siguiente a partir de las 7 PM hora Colombia
+  const hoy = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Bogota",
+  }).format(new Date());
   inputDesde.value = hoy;
   inputHasta.value = hoy;
 
@@ -678,7 +738,9 @@ async function cargarDesdeSupabase(desde, hasta) {
 async function cargarHistoricoServidor() {
   // Intentar cargar desde Supabase automáticamente con la fecha de hoy
   try {
-    const hoy = new Date().toISOString().split("T")[0];
+    const hoy = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Bogota",
+    }).format(new Date());
     const res = await authFetch(`/api/asistencia?fecha=${hoy}`);
     if (!res.ok) return;
     const { total } = await res.json();
@@ -714,6 +776,8 @@ async function restaurarUltimoRango() {
     await cargarDesdeSupabase(desde, hasta);
   } catch (e) {
     console.warn("[Restaurar] No se pudo restaurar el rango:", e);
+    // Limpiar el rango guardado para evitar que el error persista en cada refresh
+    localStorage.removeItem(LS_RANGO_KEY);
   }
 }
 
@@ -971,11 +1035,9 @@ function clearSession() {
     el.classList.remove("show"),
   );
   const ksm = document.getElementById("kpiStripMulti");
-  const ksm2 = document.getElementById("kpiStripMulti2");
   const krd = document.getElementById("kpiResumenDias");
-  if (kpiStrip) kpiStrip.style.display = "none";
-  if (ksm) ksm.style.display = "none";
-  if (ksm2) ksm2.style.display = "none";
+  kpiStrip?.classList.remove("show");
+  ksm?.classList.remove("show");
   if (krd) krd.style.display = "none";
 
   // Mostrar selector de fechas (no el empty state)
@@ -1017,10 +1079,29 @@ function val(row, tipo) {
   return c ? String(row[c] || "").trim() : "";
 }
 
+/**
+ * animateCounter(el, target)
+ * Anima suavemente el número de un elemento desde su valor actual hasta `target`.
+ * Usa cubic ease-out (300ms) para una sensación fluida tipo fintech.
+ */
+function animateCounter(el, target) {
+  const current = parseInt(el.textContent.replace(/\D/g, ""), 10) || 0;
+  if (current === target) return;
+  const dur = 500;
+  const t0 = performance.now();
+  const step = (now) => {
+    const p = Math.min((now - t0) / dur, 1);
+    const eased = 1 - Math.pow(1 - p, 3); // cubic ease-out
+    el.textContent = Math.round(current + (target - current) * eased);
+    if (p < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
 /** Evalúa si un valor representa "Sí" en cualquiera de sus variantes */
 function esSi(v) {
   const n = norm(v);
-  return n === "si" || n === "sí" || n === "1" || n === "true";
+  return n === "si" || n === "1" || n === "true";
 }
 
 /**
@@ -1184,23 +1265,48 @@ function setupBabySearch() {
       return;
     }
 
-    const allNames = UnifiedModel.getBabyNames();
-    const matches = allNames.filter((n) => norm(n).includes(term)).slice(0, 10);
+    // Buscar en registros completos (nombre+madre) para poder distinguir homónimos
+    const todos = UnifiedModel.getAll();
+    const seen = new Set();
+    const matches = [];
+    for (const r of todos) {
+      const nombre = val(r, "bebe");
+      if (!nombre) continue;
+      const madre = val(r, "madre") || "";
+      const key = norm(nombre) + "|" + norm(madre);
+      if (seen.has(key)) continue;
+      if (!norm(nombre).includes(term)) continue;
+      seen.add(key);
+      matches.push({ nombre, madre });
+      if (matches.length >= 10) break;
+    }
+
     if (!matches.length) {
       dropdown.style.display = "none";
       return;
     }
 
-    matches.forEach((name, idx) => {
+    // Detectar si hay homónimos para saber si mostrar la madre
+    const nombreCount = {};
+    matches.forEach(({ nombre }) => {
+      nombreCount[norm(nombre)] = (nombreCount[norm(nombre)] || 0) + 1;
+    });
+
+    matches.forEach(({ nombre, madre }, idx) => {
       const item = document.createElement("div");
       item.className = "baby-dropdown-item";
       const color = PALETTE[idx % PALETTE.length];
-      item.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block;margin-right:10px;flex-shrink:0"></span>${name}`;
+      const tieneHomonimo = (nombreCount[norm(nombre)] || 0) > 1;
+      const madreHtml =
+        tieneHomonimo && madre
+          ? `<span style="font-size:10px;color:#94a3b8;margin-left:6px">· ${madre}</span>`
+          : "";
+      item.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block;margin-right:10px;flex-shrink:0"></span>${nombre}${madreHtml}`;
       item.addEventListener("mousedown", (e) => {
         e.preventDefault();
-        input.value = name;
+        input.value = nombre;
         dropdown.style.display = "none";
-        selectBaby(name);
+        selectBaby(nombre, madre);
       });
       dropdown.appendChild(item);
     });
@@ -1232,14 +1338,16 @@ function setupBabySearch() {
   });
 }
 
-function selectBaby(name) {
-  // Buscar la madre del bebé en el modelo para construir la clave compuesta.
-  // Sin esto, dos bebés con el mismo nombre pero diferente madre se mezclan
-  // en el historial individual.
-  const perfil = UnifiedModel.getBabyNames().includes(name)
-    ? Array.from(UnifiedModel.getAll()).find((r) => val(r, "bebe") === name)
-    : null;
-  const madre = perfil ? val(perfil, "madre") : "";
+function selectBaby(name, madreHint) {
+  // Si el caller ya conoce la madre (dropdown con homónimos), la usamos directamente.
+  // Si no, buscamos el primer registro que coincida con el nombre.
+  let madre = madreHint ?? "";
+  if (!madre) {
+    const perfil = Array.from(UnifiedModel.getAll()).find(
+      (r) => val(r, "bebe") === name,
+    );
+    madre = perfil ? val(perfil, "madre") : "";
+  }
 
   selectedBaby = { nombre: name, madre };
   document.getElementById("selectedBabyName").textContent = madre
@@ -1305,8 +1413,8 @@ function updateKPIs(resumen, todosLosRegistros) {
 
   if (esModoUnDia) {
     // ── MODO 1 DÍA ────────────────────────────────────────────────────────
-    kpiStrip1.style.display = "";
-    kpiStripM.style.display = "none";
+    kpiStrip1.classList.add("show");
+    kpiStripM.classList.remove("show");
     kpiResumen.style.display = "none";
 
     const total = resumen.length;
@@ -1318,23 +1426,23 @@ function updateKPIs(resumen, todosLosRegistros) {
     const diaLabel =
       diasUnicos[0] || fechasUnicas[0] || loadedFiles[0]?.name || "—";
 
-    document.getElementById("kpiTotal").textContent = total;
+    animateCounter(document.getElementById("kpiTotal"), total);
     document.getElementById("kpiDia").textContent = diaLabel;
-    document.getElementById("kpiPresentes").textContent = presentes;
+    animateCounter(document.getElementById("kpiPresentes"), presentes);
     document.getElementById("kpiPresentePct").textContent =
       `${total ? Math.round((presentes / total) * 100) : 0}% de inscritos`;
-    document.getElementById("kpiAusentes").textContent = ausentes;
+    animateCounter(document.getElementById("kpiAusentes"), ausentes);
     document.getElementById("kpiAusentePct").textContent =
       `${total ? Math.round((ausentes / total) * 100) : 0}% de inscritos`;
-    document.getElementById("kpiReportes").textContent = reportes;
+    animateCounter(document.getElementById("kpiReportes"), reportes);
     const elE = document.getElementById("kpiExtras");
     const elN = document.getElementById("kpiNocidi");
-    if (elE) elE.textContent = nExtras;
-    if (elN) elN.textContent = nNoCidi;
+    if (elE) animateCounter(elE, nExtras);
+    if (elN) animateCounter(elN, nNoCidi);
   } else {
     // ── MODO VARIOS DÍAS ──────────────────────────────────────────────────
-    kpiStrip1.style.display = "none";
-    kpiStripM.style.display = "";
+    kpiStrip1.classList.remove("show");
+    kpiStripM.classList.add("show");
     kpiResumen.style.display = "";
 
     // Estadísticas por día/archivo — base real para tasa
@@ -1378,18 +1486,18 @@ function updateKPIs(resumen, todosLosRegistros) {
     const mejorDia = dias.reduce((a, b) => (b.tasa > a.tasa ? b : a), dias[0]);
     const peorDia = dias.reduce((a, b) => (b.tasa < a.tasa ? b : a), dias[0]);
 
-    document.getElementById("kpiTotalMulti").textContent = totalBebesUnicos;
+    animateCounter(document.getElementById("kpiTotalMulti"), totalBebesUnicos);
     document.getElementById("kpiDiasMulti").textContent =
       `bebés distintos · ${dias.length} sesión(es)`;
     document.getElementById("kpiTasaMulti").textContent = `${tasaPromedio}%`;
-    document.getElementById("kpiMejorDia").textContent = `${mejorDia?.tasa}%`;
+    document.getElementById("kpiMejorDia").textContent = `${mejorDia?.tasa ?? 0}%`;
     document.getElementById("kpiMejorDiaNombre").textContent =
       mejorDia?.label || "—";
-    document.getElementById("kpiPeorDia").textContent = `${peorDia?.tasa}%`;
+    document.getElementById("kpiPeorDia").textContent = `${peorDia?.tasa ?? 0}%`;
     document.getElementById("kpiPeorDiaNombre").textContent =
       peorDia?.label || "—";
-    document.getElementById("kpiNuncaMulti").textContent = nuncaVinieron;
-    document.getElementById("kpiReportesMulti").textContent = totalReportes;
+    animateCounter(document.getElementById("kpiNuncaMulti"), nuncaVinieron);
+    animateCounter(document.getElementById("kpiReportesMulti"), totalReportes);
 
     // ── Tabla resumen por día con semáforo ───────────────────────────────
     const DIAS_ORD = [
@@ -1837,7 +1945,7 @@ function buildCollapsible(id, title, renderFn) {
   wrap.innerHTML = `
     <button class="collapsible-trigger">
       <span class="collapsible-title">${title}</span>
-      <span class="collapsible-arrow">▶</span>
+      <span class="collapsible-arrow collapsible-arrow--closed">▶ Ver</span>
     </button>
     <div class="collapsible-body" id="collapsible-body-${id}"></div>`;
   dashGrid.appendChild(wrap);
@@ -1847,7 +1955,9 @@ function buildCollapsible(id, title, renderFn) {
     const arrow = wrap.querySelector(".collapsible-arrow");
     if (body.classList.contains("open")) {
       body.classList.remove("open");
-      arrow.textContent = "▶";
+      arrow.textContent = "▶ Ver";
+      arrow.classList.remove("collapsible-arrow--open");
+      arrow.classList.add("collapsible-arrow--closed");
       const cid = `chart-${id}`;
       if (charts[cid]) {
         charts[cid].destroy();
@@ -1855,7 +1965,9 @@ function buildCollapsible(id, title, renderFn) {
       }
     } else {
       body.classList.add("open");
-      arrow.textContent = "▼";
+      arrow.textContent = "▼ Ocultar";
+      arrow.classList.remove("collapsible-arrow--closed");
+      arrow.classList.add("collapsible-arrow--open");
       body.innerHTML = "";
       renderFn();
     }
@@ -2200,7 +2312,7 @@ function buildChartPrograma(data) {
     const n = norm(raw);
     // Ignorar vacíos y "nan" (valor nulo que SheetJS convierte a string "nan")
     if (!n || n === "nan") return null;
-    if (n === "hoteleria" || n === "hoteleria" || n.includes("hotel"))
+    if (n === "hoteleria" || n.includes("hotel"))
       return "Hotelería";
     if (n === "cocina") return "Cocina";
     if (n === "belleza") return "Belleza";
@@ -2548,10 +2660,25 @@ function buildChartBarFilter(data, campo, titulo, color) {
   if (!cCol) return;
   const counts = {};
   data.forEach((r) => {
-    const v = String(r[cCol] || "").trim() || "(Sin dato)";
+    let v = String(r[cCol] || "").trim() || "(Sin dato)";
+    // Normalizar etiquetas de edad para consistencia con buildChartEdad
+    if (campoKey === "edad") {
+      if (v === "6-15") v = "6 – 15 meses";
+      else if (v === "16-30") v = "16 – 30 meses";
+    }
     counts[v] = (counts[v] || 0) + 1;
   });
-  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const DIA_ORDER = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+  const entries = Object.entries(counts).sort((a, b) => {
+    if (campoKey === "dia") {
+      const ai = DIA_ORDER.indexOf(a[0]);
+      const bi = DIA_ORDER.indexOf(b[0]);
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return 1;
+    }
+    return b[1] - a[1];
+  });
   if (!entries.length) return;
   const total = entries.reduce((s, [, v]) => s + v, 0);
   const labels = entries.map(([k]) => k);
@@ -3026,15 +3153,8 @@ function buildETLTendencia(data) {
       porPeriodo[d].total++;
       if (esSi(val(r, "asistencia"))) porPeriodo[d].presentes++;
     });
-    // Ordenar por día de semana
-    const orden = [
-      "lunes",
-      "martes",
-      "miercoles",
-      "miércoles",
-      "jueves",
-      "viernes",
-    ];
+    // Ordenar por día de semana — norm() siempre devuelve sin tilde, solo hace falta "miercoles"
+    const orden = ["lunes", "martes", "miercoles", "jueves", "viernes"];
     Object.keys(porPeriodo)
       .sort((a, b) => {
         const ia = orden.indexOf(norm(a)),
@@ -3049,14 +3169,7 @@ function buildETLTendencia(data) {
   }
 
   const periodos = Object.keys(porPeriodo).sort((a, b) => {
-    const DIAS = [
-      "lunes",
-      "martes",
-      "miercoles",
-      "miércoles",
-      "jueves",
-      "viernes",
-    ];
+    const DIAS = ["lunes", "martes", "miercoles", "jueves", "viernes"];
     const ia = DIAS.indexOf(norm(a)),
       ib = DIAS.indexOf(norm(b));
     if (ia >= 0 && ib >= 0) return ia - ib;
@@ -3812,7 +3925,9 @@ function buildTabla(data) {
           if (inp) inp.value = nombre;
           document.getElementById("selectedBabyName").textContent = nombre;
           document.getElementById("selectedBabyTag").style.display = "flex";
-          selectBaby(nombre);
+          // Pasar la madre desde el registro para resolver homónimos correctamente
+          const madreDelReg = colKey("madre") ? String(r[colKey("madre")] || "").trim() : "";
+          selectBaby(nombre, madreDelReg);
           window.scrollTo({ top: 0, behavior: "smooth" });
         });
       }
@@ -4315,7 +4430,7 @@ function exportarExcel(datos, COLS) {
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .trim();
-    return n === "si" || n === "si" || n === "1" || n === "true" ? "Sí" : "No";
+    return n === "si" || n === "1" || n === "true" ? "Sí" : "No";
   };
   const celdaReporte = (v) => {
     const n = v
@@ -4323,7 +4438,7 @@ function exportarExcel(datos, COLS) {
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .trim();
-    return n === "si" || n === "si" || n === "1" || n === "true"
+    return n === "si" || n === "1" || n === "true"
       ? "Reportado"
       : "";
   };
@@ -4562,6 +4677,8 @@ function chartOpts(isPie) {
             ticks: {
               color: "#8ba869",
               font: { family: "JetBrains Mono", size: 10 },
+              callback: (v) =>
+                Number.isInteger(v) ? v.toLocaleString("es-CO") : v,
             },
             grid: { color: "rgba(133,218,26,.07)" },
             border: { color: "#e0eccc" },
@@ -4587,8 +4704,13 @@ function showLoading(on) {
   loadingEl.classList.toggle("show", on);
 }
 
-function showToast(msg, error = false) {
+let _toastTimer = null;
+function showToast(msg, error = false, ms) {
+  if (_toastTimer) clearTimeout(_toastTimer);
   toastEl.textContent = (error ? "❌ " : "✅ ") + msg;
   toastEl.className = "toast show" + (error ? " error" : "");
-  setTimeout(() => toastEl.classList.remove("show"), 3500);
+  _toastTimer = setTimeout(
+    () => toastEl.classList.remove("show"),
+    ms ?? (error ? 5000 : 3500),
+  );
 }

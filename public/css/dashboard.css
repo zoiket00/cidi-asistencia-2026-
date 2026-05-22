@@ -538,12 +538,14 @@ body {
 /* ─── KPI Strip ───────────────────────────────────────────── */
 .kpi-strip {
   display: none;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
   gap: 16px;
   margin-bottom: 28px;
   opacity: 0;
   transform: translateY(16px);
-  transition: all 0.45s ease;
+  transition:
+    opacity 0.45s ease,
+    transform 0.45s ease;
 }
 
 .kpi-strip.show {
@@ -597,6 +599,8 @@ body {
   letter-spacing: -1.5px;
   line-height: 1;
   color: var(--text);
+  font-variant-numeric: tabular-nums;
+  transition: color 0.3s ease;
 }
 
 .kpi-green .kpi-value {
@@ -829,14 +833,39 @@ body {
 }
 
 /* ─── Chart Cards ─────────────────────────────────────────── */
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  transition: all 0.25s ease;
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.25s ease,
+    border-color 0.25s ease;
   overflow: hidden;
+  animation: cardIn 0.35s ease both;
 }
+
+/* Stagger progresivo para las primeras 8 cards */
+.dashboard-grid .card:nth-child(1) { animation-delay: 0ms; }
+.dashboard-grid .card:nth-child(2) { animation-delay: 40ms; }
+.dashboard-grid .card:nth-child(3) { animation-delay: 80ms; }
+.dashboard-grid .card:nth-child(4) { animation-delay: 120ms; }
+.dashboard-grid .card:nth-child(5) { animation-delay: 160ms; }
+.dashboard-grid .card:nth-child(6) { animation-delay: 200ms; }
+.dashboard-grid .card:nth-child(7) { animation-delay: 240ms; }
+.dashboard-grid .card:nth-child(8) { animation-delay: 280ms; }
 
 .card:hover {
   box-shadow: var(--shadow-lg);
@@ -1563,4 +1592,93 @@ tbody tr:last-child td {
 }
 .sidebar-user-logout:hover {
   background: #ffebee;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   PRINT STYLES — sólo datos, sin chrome
+   ──────────────────────────────────────────────────────────── */
+@media print {
+  /* Ocultar UI que no aporta al reporte */
+  .sidebar,
+  .top-controls,
+  .filter-bar,
+  .btn,
+  .toast,
+  .loading,
+  .baby-search-wrap,
+  .selected-baby-tag,
+  .collapsible-trigger,
+  #emptyState {
+    display: none !important;
+  }
+
+  /* Layout completo sin sidebar */
+  .layout {
+    display: block !important;
+  }
+
+  .main-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  /* KPIs en fila horizontal */
+  .kpi-strip {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+    page-break-inside: avoid;
+  }
+
+  .kpi {
+    flex: 1 1 140px;
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    background: #fff !important;
+  }
+
+  /* Cards — 2 columnas en impresión */
+  .dashboard-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+  }
+
+  .card {
+    break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    background: #fff !important;
+    animation: none !important;
+  }
+
+  /* Collapsibles abiertos en impresión */
+  .collapsible-body {
+    display: block !important;
+  }
+
+  /* Colores seguros en blanco/negro */
+  body {
+    color: #000 !important;
+    background: #fff !important;
+  }
+
+  .card-title,
+  .kpi-label {
+    color: #000 !important;
+  }
+
+  /* Canvas de Chart.js — dejar espacio razonable */
+  canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Pie de página con nombre del reporte */
+  @page {
+    margin: 18mm 14mm;
+    size: A4 landscape;
+  }
 }
