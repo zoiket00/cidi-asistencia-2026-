@@ -454,16 +454,25 @@ app.delete("/api/bebes/:id", async (req, res) => {
  */
 app.get("/api/asistencia/fechas", async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from("registros_asistencia")
-      .select("fecha, dia")
-      .limit(50000);
-    if (error) throw error;
+    const PAGE_SIZE = 1000;
+    let allData = [];
+    let from = 0;
+    let hasMore = true;
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from("registros_asistencia")
+        .select("fecha, dia")
+        .range(from, from + PAGE_SIZE - 1);
+      if (error) throw error;
+      allData = allData.concat(data);
+      hasMore = data.length === PAGE_SIZE;
+      from += PAGE_SIZE;
+    }
 
     // Deduplicar — solo necesitamos combinaciones únicas fecha+dia
     const seen = new Set();
     const fechas = [];
-    for (const r of data) {
+    for (const r of allData) {
       const key = `${r.fecha}|${r.dia}`;
       if (!seen.has(key)) {
         seen.add(key);
@@ -746,23 +755,31 @@ app.get("/api/exportar", async (req, res) => {
         .json({ error: "Solo admin y coordinadora pueden exportar registros" });
     }
 
-    // Construir query con filtros opcionales
-    let query = supabase
-      .from("registros_asistencia")
-      .select("*")
-      .gte("fecha", desde)
-      .lte("fecha", hasta)
-      .order("fecha", { ascending: true })
-      .order("dia", { ascending: true })
-      .order("nombre_bebe", { ascending: true })
-      .limit(50000);
-
-    if (programa) query = query.eq("programa", programa);
-    if (fase) query = query.eq("fase", fase);
-    if (dia) query = query.eq("dia", dia);
-
-    const { data, error } = await query;
-    if (error) throw error;
+    // Construir query con filtros opcionales — paginada para superar el cap de PostgREST
+    const PAGE_SIZE = 1000;
+    let allData = [];
+    let from = 0;
+    let hasMore = true;
+    while (hasMore) {
+      let q = supabase
+        .from("registros_asistencia")
+        .select("*")
+        .gte("fecha", desde)
+        .lte("fecha", hasta)
+        .order("fecha", { ascending: true })
+        .order("dia", { ascending: true })
+        .order("nombre_bebe", { ascending: true })
+        .range(from, from + PAGE_SIZE - 1);
+      if (programa) q = q.eq("programa", programa);
+      if (fase) q = q.eq("fase", fase);
+      if (dia) q = q.eq("dia", dia);
+      const { data, error } = await q;
+      if (error) throw error;
+      allData = allData.concat(data);
+      hasMore = data.length === PAGE_SIZE;
+      from += PAGE_SIZE;
+    }
+    const data = allData;
 
     // Mapear columnas al formato exacto del Excel de las profesoras
     const mapearFila = (r) => ({
