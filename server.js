@@ -601,25 +601,34 @@ app.get("/api/asistencia", async (req, res) => {
   try {
     const { fecha, desde, hasta, dia } = req.query;
 
-    let query = supabase
-      .from("registros_asistencia")
-      .select("*")
-      .order("fecha", { ascending: true })
-      .order("nombre_bebe", { ascending: true })
-      .limit(50000); // ~1.5 años de datos con 119 bebés activos
+    // PostgREST limita a 1000 filas por request — paginamos hasta traer todo
+    const PAGE_SIZE = 1000;
+    let allData = [];
+    let from = 0;
+    let hasMore = true;
 
-    if (fecha) query = query.eq("fecha", fecha);
-    if (dia) query = query.eq("dia", dia);
-    if (desde) query = query.gte("fecha", desde);
-    if (hasta) query = query.lte("fecha", hasta);
+    while (hasMore) {
+      let q = supabase
+        .from("registros_asistencia")
+        .select("*")
+        .order("fecha", { ascending: true })
+        .order("nombre_bebe", { ascending: true })
+        .range(from, from + PAGE_SIZE - 1);
 
-    const { data, error } = await query;
-    if (error) throw error;
+      if (fecha) q = q.eq("fecha", fecha);
+      if (dia) q = q.eq("dia", dia);
+      if (desde) q = q.gte("fecha", desde);
+      if (hasta) q = q.lte("fecha", hasta);
 
-    if (data.length >= 50000)
-      console.warn(
-        "⚠️  GET /api/asistencia: límite de 50000 alcanzado — puede haber registros sin devolver",
-      );
+      const { data, error } = await q;
+      if (error) throw error;
+
+      allData = allData.concat(data);
+      hasMore = data.length === PAGE_SIZE;
+      from += PAGE_SIZE;
+    }
+
+    const data = allData;
 
     const registros = data.map((r) => ({
       NombreBebe: r.nombre_bebe,
