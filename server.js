@@ -58,9 +58,8 @@ supabase
     else console.log(`✅  Supabase conectado — ${count} bebés en la BD`);
   });
 
-// ── Normalización de nombres ───────────────────────────────────────────────────
-// Colapsa mayúsculas, tildes y espacios múltiples para comparar nombres con
-// tolerancia a errores tipográficos leves al guardar asistencia.
+// ── Normalización y fuzzy-matching de nombres ─────────────────────────────────
+
 function normName(s) {
   return String(s || "")
     .toLowerCase()
@@ -68,6 +67,67 @@ function normName(s) {
     .replace(/[̀-ͯ]/g, "")
     .trim()
     .replace(/\s+/g, " ");
+}
+
+// Distancia de Levenshtein normalizada → similitud [0,1]
+// Detecta typos: "Churio" → "Chourio", "Epinosa" → "Espinosa"
+function strSim(a, b) {
+  if (a === b) return 1;
+  const m = a.length, n = b.length;
+  if (!m || !n) return 0;
+  const dp = Array.from({ length: m + 1 }, (_, i) => Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] =
+        a[i - 1] === b[j - 1]
+          ? dp[i - 1][j - 1]
+          : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+  return 1 - dp[m][n] / Math.max(m, n);
+}
+
+// Solapamiento de tokens: fracción de palabras del input que aparecen en canonical.
+// Detecta nombres abreviados: "axel espinosa" ⊂ "axel alejandro espinosa zapata"
+function tokenOverlap(input, canonical) {
+  const it = normName(input).split(" ").filter(Boolean);
+  const ct = new Set(normName(canonical).split(" ").filter(Boolean));
+  if (!it.length) return 0;
+  return it.filter((t) => ct.has(t)).length / it.length;
+}
+
+/**
+ * Busca el bebé canónico más parecido en el catálogo.
+ * Combina token-overlap + Levenshtein para manejar:
+ *   - Nombres abreviados: "axel espinosa" → "Axel Alejandro Espinosa Zapata"
+ *   - Typos: "Churio" → "Chourio", "Epinosa" → "Espinosa"
+ * Requiere que AMBOS campos (bebé + madre) superen el umbral → mínimos falsos positivos.
+ * @returns {object|null} entrada canónica de bebes, o null si no hay match seguro
+ */
+function findCanonical(nombre_bebe, nombre_madre, catalogo) {
+  const nb = normName(nombre_bebe);
+  const nm = normName(nombre_madre);
+
+  // 1. Coincidencia exacta post-normalización (más rápida, máxima confianza)
+  for (const b of catalogo) {
+    if (normName(b.nombre_bebe) === nb && normName(b.nombre_madre) === nm)
+      return b;
+  }
+
+  // 2. Fuzzy: token-overlap + Levenshtein combinados
+  let best = null, bestScore = 0;
+  for (const b of catalogo) {
+    const cb = normName(b.nombre_bebe);
+    const cm = normName(b.nombre_madre);
+    const bebeScore  = Math.max(tokenOverlap(nb, cb), strSim(nb, cb));
+    const madreScore = Math.max(tokenOverlap(nm, cm), strSim(nm, cm));
+    // Umbral conservador: ambos campos deben coincidir bien
+    if (bebeScore >= 0.75 && madreScore >= 0.65) {
+      const score = bebeScore * madreScore;
+      if (score > bestScore) { bestScore = score; best = b; }
+    }
+  }
+  return best;
 }
 
 // ── CORS ───────────────────────────────────────────────────────────────────────
@@ -526,15 +586,11 @@ app.post("/api/asistencia/guardar", async (req, res) => {
       .json({ error: "fecha debe tener formato YYYY-MM-DD" });
 
   try {
-    // Cargar catálogo canónico para normalizar nombres antes de guardar.
-    // Esto evita que errores tipográficos de los Excels creen identidades duplicadas.
+    // Cargar catálogo canónico una sola vez para canonicalizar todos los nombres.
     const { data: catalogo } = await supabase
       .from("bebes")
       .select("nombre_bebe, nombre_madre");
-    const catalogoMap = new Map();
-    for (const b of catalogo || []) {
-      catalogoMap.set(normName(b.nombre_bebe) + "|" + normName(b.nombre_madre), b);
-    }
+    const cat = catalogo || [];
 
     const filas = registros
       .filter((r) => r.NombreBebe && String(r.NombreBebe).trim())
@@ -542,9 +598,8 @@ app.post("/api/asistencia/guardar", async (req, res) => {
         let nombre_bebe = String(r.NombreBebe || "").trim();
         let nombre_madre = String(r.NombreMadre || "").trim();
 
-        // Si hay una coincidencia exacta (post-normalización) en el catálogo,
-        // usar el nombre canónico para evitar duplicados por tildes/espacios/mayúsculas
-        const canonical = catalogoMap.get(normName(nombre_bebe) + "|" + normName(nombre_madre));
+        // Buscar nombre canónico con fuzzy matching (typos + abreviaturas + espacios)
+        const canonical = findCanonical(nombre_bebe, nombre_madre, cat);
         if (canonical) {
           nombre_bebe = canonical.nombre_bebe;
           nombre_madre = canonical.nombre_madre;
