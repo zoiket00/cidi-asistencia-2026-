@@ -727,20 +727,11 @@ app.get("/api/asistencia", async (req, res) => {
       from += PAGE_SIZE;
     }
 
-    // Canonicalizar nombres en memoria — la BD no se toca, pero el dashboard
-    // recibe nombres unificados y el TOTAL ÚNICOS refleja la realidad.
-    const { data: catalogo } = await supabase
-      .from("bebes")
-      .select("nombre_bebe, nombre_madre");
-    const cat = catalogo || [];
-
-    const registros = allData.map((r) => {
-      const canonical = findCanonical(r.nombre_bebe, r.nombre_madre, cat);
-      return ({
-      NombreBebe: canonical ? canonical.nombre_bebe : r.nombre_bebe,
-      NombreMadre: canonical ? canonical.nombre_madre : r.nombre_madre,
+    const registros = allData.map((r) => ({
+      NombreBebe: r.nombre_bebe,
+      NombreMadre: r.nombre_madre,
       Fase: r.fase,
-      InstitucionMadre: r.fase, // alias para compatibilidad con dashboard viejo
+      InstitucionMadre: r.fase,
       ProgramaMadre: r.programa,
       Edad: r.edad,
       Fecha: r.fecha,
@@ -751,10 +742,9 @@ app.get("/api/asistencia", async (req, res) => {
       SituacionEspecifica: r.situacion_especifica,
       Nota: r.nota,
       Extras: r.extras,
-      Visitante: r.extras, // alias para compatibilidad
+      Visitante: r.extras,
       NoCidi: r.no_cidi,
-      });
-    });
+    }));
 
     res.json({ ok: true, total: registros.length, registros });
   } catch (err) {
