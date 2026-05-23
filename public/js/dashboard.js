@@ -47,7 +47,8 @@ function norm(str = "") {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .trim();
+    .trim()
+    .replace(/\s+/g, " ");
 }
 
 const UnifiedModel = (() => {

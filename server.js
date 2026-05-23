@@ -58,6 +58,18 @@ supabase
     else console.log(`✅  Supabase conectado — ${count} bebés en la BD`);
   });
 
+// ── Normalización de nombres ───────────────────────────────────────────────────
+// Colapsa mayúsculas, tildes y espacios múltiples para comparar nombres con
+// tolerancia a errores tipográficos leves al guardar asistencia.
+function normName(s) {
+  return String(s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
 // ── CORS ───────────────────────────────────────────────────────────────────────
 // En producción restringe a tu dominio de Render.
 // En local permite cualquier origen para facilitar el desarrollo.
@@ -514,26 +526,49 @@ app.post("/api/asistencia/guardar", async (req, res) => {
       .json({ error: "fecha debe tener formato YYYY-MM-DD" });
 
   try {
+    // Cargar catálogo canónico para normalizar nombres antes de guardar.
+    // Esto evita que errores tipográficos de los Excels creen identidades duplicadas.
+    const { data: catalogo } = await supabase
+      .from("bebes")
+      .select("nombre_bebe, nombre_madre");
+    const catalogoMap = new Map();
+    for (const b of catalogo || []) {
+      catalogoMap.set(normName(b.nombre_bebe) + "|" + normName(b.nombre_madre), b);
+    }
+
     const filas = registros
       .filter((r) => r.NombreBebe && String(r.NombreBebe).trim())
-      .map((r) => ({
-        nombre_bebe: String(r.NombreBebe || "").trim(),
-        nombre_madre: String(r.NombreMadre || "").trim(),
-        fase: leerFase(r),
-        programa: String(
-          r.ProgramaMadre || r.Programa || r.programa || "",
-        ).trim(),
-        edad: String(r.Edad || "").trim(),
-        fecha,
-        dia,
-        asistencia: String(r.Asistencia || "No").trim(),
-        ubicacion: String(r.Ubicacion || "").trim(),
-        reporte: String(r.Reporte || "No").trim(),
-        situacion_especifica: String(r.SituacionEspecifica || "").trim(),
-        nota: String(r.Nota || "").trim(),
-        extras: String(r.Extras || r.Visitante || "").trim(),
-        no_cidi: String(r.NoCidi || "").trim(),
-      }));
+      .map((r) => {
+        let nombre_bebe = String(r.NombreBebe || "").trim();
+        let nombre_madre = String(r.NombreMadre || "").trim();
+
+        // Si hay una coincidencia exacta (post-normalización) en el catálogo,
+        // usar el nombre canónico para evitar duplicados por tildes/espacios/mayúsculas
+        const canonical = catalogoMap.get(normName(nombre_bebe) + "|" + normName(nombre_madre));
+        if (canonical) {
+          nombre_bebe = canonical.nombre_bebe;
+          nombre_madre = canonical.nombre_madre;
+        }
+
+        return {
+          nombre_bebe,
+          nombre_madre,
+          fase: leerFase(r),
+          programa: String(
+            r.ProgramaMadre || r.Programa || r.programa || "",
+          ).trim(),
+          edad: String(r.Edad || "").trim(),
+          fecha,
+          dia,
+          asistencia: String(r.Asistencia || "No").trim(),
+          ubicacion: String(r.Ubicacion || "").trim(),
+          reporte: String(r.Reporte || "No").trim(),
+          situacion_especifica: String(r.SituacionEspecifica || "").trim(),
+          nota: String(r.Nota || "").trim(),
+          extras: String(r.Extras || r.Visitante || "").trim(),
+          no_cidi: String(r.NoCidi || "").trim(),
+        };
+      });
 
     if (filas.length === 0)
       return res
